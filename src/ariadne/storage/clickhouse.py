@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import threading
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 from uuid import UUID
@@ -24,6 +25,13 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
+def strip_sql_comments(sql: str) -> str:
+    """逐行剥掉行首注释，保留行内/行尾注释。"""
+    return "\n".join(
+        line for line in sql.splitlines() if not line.strip().startswith("--")
+    )
+
+
 def iter_ddl_statements(sql: str) -> Iterator[str]:
     """按分号切分 DDL，逐条剥掉行注释后产出非空语句。
 
@@ -32,9 +40,7 @@ def iter_ddl_statements(sql: str) -> Iterator[str]:
     TTL 共 10 条曾因此静默跳过，只留下依赖它们的物化视图。
     """
     for chunk in sql.split(";"):
-        body = "\n".join(
-            line for line in chunk.splitlines() if not line.strip().startswith("--")
-        ).strip()
+        body = strip_sql_comments(chunk).strip()
         if body:
             yield body
 
@@ -103,9 +109,15 @@ class ClickHouseStore:
             return False
 
     def migrate(self, ddl_dir: Path) -> list[str]:
-        """按文件名顺序执行 DDL。语句以分号分隔，全部幂等。"""
+        """按文件名顺序执行未应用的 DDL，返回本次应用的（含 hash 变更重跑）。
+
+        版本化语义（与 Postgres Alembic 对齐）：每个 .sql 文件的「无注释
+        内容 sha256」记录在 ariadne.schema_migrations，只执行内容与记录
+        不一致的文件 —— 文件级「全成功才记录」，中途失败的文件下次整体
+        重跑，靠全文件幂等兜底。历史库没有迁移表：首次运行视为全量应用。
+        """
         applied: list[str] = []
-        # 建库语句需要用无 database 的连接执行
+        # 建库语句和 schema_migrations 表本身需要用无 database 的连接执行
         bootstrap = clickhouse_connect.get_client(
             host=self._settings.host,
             port=self._settings.port,
@@ -113,14 +125,65 @@ class ClickHouseStore:
             password=self._settings.password.get_secret_value(),
         )
         try:
+            self._ensure_migrations_table(bootstrap)
+            recorded = self._applied_files(bootstrap)
             for path in sorted(ddl_dir.glob("*.sql")):
-                for stmt in iter_ddl_statements(path.read_text(encoding="utf-8")):
+                content = path.read_text(encoding="utf-8")
+                digest = self._file_digest(content)
+                if recorded.get(path.name) == digest:
+                    continue
+                for stmt in iter_ddl_statements(content):
                     bootstrap.command(stmt)
+                bootstrap.command(
+                    "INSERT INTO ariadne.schema_migrations"
+                    " (file_name, applied_at, content_hash) VALUES"
+                    " ({name:String}, {at:DateTime64(3, 'UTC')}, {hash:String})",
+                    parameters={
+                        "name": path.name,
+                        "at": datetime.now(UTC).replace(tzinfo=None),
+                        "hash": digest,
+                    },
+                )
                 applied.append(path.name)
                 logger.info("ddl applied", extra={"file": path.name})
         finally:
             bootstrap.close()
         return applied
+
+    @staticmethod
+    def _file_digest(content: str) -> str:
+        """对去掉注释的语句内容取 sha256 —— 注释修改不应触发重跑。"""
+        return hashlib.sha256(
+            strip_sql_comments(content).encode("utf-8")
+        ).hexdigest()
+
+    @staticmethod
+    def _ensure_migrations_table(client: Client) -> None:
+        """迁移记录表必须代码内建，不能放进 .sql —— 它是迁移自身的先决条件。
+
+        建库语句先于建表执行：全新部署时 ariadne 库还不存在，001_spans.sql
+        里的 CREATE DATABASE 要到循环里才轮得到，不能拿它当先决条件。
+        """
+        client.command("CREATE DATABASE IF NOT EXISTS ariadne")
+        client.command(
+            "CREATE TABLE IF NOT EXISTS ariadne.schema_migrations"
+            " ("
+            "     file_name   String,"
+            "     applied_at  DateTime64(3, 'UTC') DEFAULT now64(3),"
+            "     content_hash String"
+            " )"
+            " ENGINE = ReplacingMergeTree(applied_at)"
+            " ORDER BY file_name"
+        )
+
+    @staticmethod
+    def _applied_files(client: Client) -> dict[str, str]:
+        """已应用文件 → 内容 hash。ReplacingMergeTree 需 FINAL 去重。"""
+        rows = client.query(
+            "SELECT file_name, content_hash"
+            " FROM ariadne.schema_migrations FINAL"
+        ).result_rows
+        return {str(name): str(hash_) for name, hash_ in rows}
 
     def insert_spans(self, spans: Sequence[AriadneSpan]) -> int:
         if not spans:

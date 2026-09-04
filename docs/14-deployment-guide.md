@@ -434,6 +434,11 @@ uv run alembic current
 uv run alembic history
 ```
 
+ClickHouse DDL 同样有版本记录：`ariadne.schema_migrations` 表记录每个
+`.sql` 文件的内容 hash（去注释后的 sha256），`ariadne-migrate` 只执行
+未应用或内容变更的文件。文件内语句全部成功才写入记录，中途失败的文件
+下次整体重跑 —— 因此所有 DDL 文件必须保持幂等（可重复执行）。
+
 ### 升级到最新版本
 
 ```powershell

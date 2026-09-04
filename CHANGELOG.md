@@ -55,14 +55,19 @@
 - ❌ 多租户 SaaS（需 Linux + gVisor/Firecracker 沙箱）
 - ❌ 不可信代码执行（Windows 平台无法提供沙箱级隔离）
 
+**可选增强已落地**（2026-09-04）：
+- ✅ ClickHouse 迁移版本化（schema_migrations 表 + 内容 hash，只执行未应用/变更文件）
+- ✅ Graph 异步 Job 模型、Redis 队列 + 租约、节点级检查点、取消 API、SSE、Prometheus 指标
+- ✅ Harness post_tool/pre_persist 卡点接线、Anthropic 配额预测性调度
+
 **待完成事项**（需外部资源）：
 - 真实 LLM 能力验收（框架已就绪，需 ANTHROPIC_API_KEY 或 OPENAI_API_KEY）
 - 百万级 Trace 压测（需压测环境）
 - S3 冷热分层实现（需外部存储配置）
 
 **可选增强**：
-- Graph 执行阶段 2/3（检查点恢复、租约机制、补偿扫描、取消）
-- ECharts chunk 进一步优化（当前 599KB gzipped 205KB）
+- ✅ ECharts chunk 优化至理论下限（585KB raw / gzip 200KB，具名导入摇树）
+  - 经 esbuild 基线测量：core 292KB + 3 图 115KB + 组件 122KB + renderer 37KB ≈ 566KB 为功能下限，<500KB 需砍功能，故收口
 
 ---
 

@@ -12,7 +12,6 @@ import {
   GridComponent,
   LegendComponent,
   MarkLineComponent,
-  TitleComponent,
   TooltipComponent,
 } from "echarts/components";
 import * as echarts from "echarts/core";
@@ -27,7 +26,6 @@ echarts.use([
   GridComponent,
   TooltipComponent,
   LegendComponent,
-  TitleComponent,
   MarkLineComponent,
   // Canvas 而非 SVG：数据点多时 Canvas 渲染性能更稳
   CanvasRenderer,
@@ -87,14 +85,6 @@ export function syncChartTheme(mode: "light" | "dark"): string {
     color: [t.k1, t.k2, t.k3, t.k4, t.k5, t.k6, t.k7, t.k8],
     backgroundColor: "transparent",
     textStyle: { fontFamily: "Noto Sans SC Variable, Inter Variable, system-ui, sans-serif" },
-    title: {
-      textStyle: {
-        color: t.text,
-        fontSize: 14,
-        fontWeight: 700,
-        fontFamily: "Noto Sans SC Variable, Inter Variable, system-ui, sans-serif",
-      },
-    },
     legend: { textStyle: { color: t.textDim }, inactiveColor: t.split },
     tooltip: {
       backgroundColor: t.surface,

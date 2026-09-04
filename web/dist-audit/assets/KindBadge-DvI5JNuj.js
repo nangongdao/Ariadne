@@ -1,1 +1,0 @@
-import{j as r}from"./vendor-DeDQFM3d.js";import{k as e}from"./index-Bg7LVps3.js";function i({kind:a}){return r.jsx("span",{className:`kind-badge kind-${a}`,title:`类型：${e(a)}`,children:e(a)})}export{i as K};

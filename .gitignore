@@ -50,6 +50,8 @@ data/
 # 前端
 node_modules/
 web/dist/
+web/dist-audit/
+web/*.tsbuildinfo
 
 # Playwright 临时 Chrome profile（含登录凭据/History/Cookies，绝不提交）
 web/.shots/tmp-prof-*/

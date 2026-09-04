@@ -30,7 +30,7 @@ _EPOCH_LITERAL = "'2024-01-01 00:00:00+00:00'"
 
 # 与 telemetry/pricing.py 的 _DEFAULT_TABLE 保持一致（单位：美元/百万 token）
 # (provider, model, input, output, cache_read, cache_write, reasoning)
-_DEFAULT_PRICES: tuple[tuple[str, str, str, str, str, str], ...] = (
+_DEFAULT_PRICES: tuple[tuple[str, str, str, str, str, str, str], ...] = (
     ("openai", "gpt-4o", "2.50", "10.00", "1.25", "0", "10.00"),
     ("openai", "gpt-4o-mini", "0.15", "0.60", "0.075", "0", "0.60"),
     ("anthropic", "claude-sonnet-5", "3.00", "15.00", "0.30", "3.75", "15.00"),

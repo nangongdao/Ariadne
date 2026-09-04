@@ -7,7 +7,6 @@ API HTTP 创建 → Redis Streams 入队 → LoopWorker（桩 LLM）认领 →
 import asyncio
 import json
 import urllib.request
-import uuid
 from decimal import Decimal
 
 from ariadne.config import get_settings

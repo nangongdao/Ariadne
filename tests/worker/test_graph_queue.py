@@ -10,6 +10,8 @@ XACK、XPENDING 行为只有真 Redis 能验证（fakeredis 的 Streams 支持�
 
 from __future__ import annotations
 
+import contextlib
+
 import pytest
 
 from ariadne.config import RedisSettings
@@ -27,10 +29,8 @@ async def queue() -> GraphQueue:
         await q.close()
         pytest.skip("Redis 不可用，先 docker compose up -d redis")
     # 清空测试流（含消费者组）
-    try:
+    with contextlib.suppress(Exception):
         await q.redis.delete("test:q:graph")
-    except Exception:
-        pass
     yield q
     await q.close()
 

@@ -213,7 +213,11 @@ class TestWorkerFallbackPolicy:
         from ariadne.worker.loop_worker import build_command_runner
 
         with pytest.raises(ValueError, match="unknown sandbox profile"):
-            build_command_runner(self._worker(profile="strct", fallback_to_restricted=True)._settings)
+            build_command_runner(
+                self._worker(
+                    profile="strct", fallback_to_restricted=True
+                )._settings
+            )
 
 
 class TestSandboxRunnerSatisfiesProtocol:

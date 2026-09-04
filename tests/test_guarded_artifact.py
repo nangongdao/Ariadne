@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import Mock
 
 import pytest
 
@@ -27,8 +26,16 @@ from ariadne.harness_module.models import (
     RuleCategory,
     Severity,
 )
-from ariadne.loop_module.artifact import ArtifactWriter, WriteReport
+from ariadne.loop_module.artifact import WriteReport
 from ariadne.runtime_module.artifact.guarded import GuardedArtifactWriter
+
+_SHIPPED_RULES_DIR = (
+    Path(__file__).resolve().parents[1]
+    / "src"
+    / "ariadne"
+    / "harness_module"
+    / "rules"
+)
 
 
 class FakeWriter:
@@ -266,17 +273,7 @@ def test_loop_state_provider_failure_does_not_block(fake_writer: FakeWriter) -> 
 
 def test_bundled_rule_output_sensitive_high_exists() -> None:
     """随包规则 output-sensitive-high（pre_persist）存在且能求值。"""
-    from pathlib import Path
-
     from ariadne.harness_module.loader import load_rule_set
-
-    _SHIPPED_RULES_DIR = (
-        Path(__file__).resolve().parents[1]
-        / "src"
-        / "ariadne"
-        / "harness_module"
-        / "rules"
-    )
 
     rules = load_rule_set(_SHIPPED_RULES_DIR)
     evaluator = compile_rule_set(rules)
@@ -292,17 +289,7 @@ def test_bundled_rule_output_sensitive_high_exists() -> None:
 
 def test_bundled_rule_normal_output_passes() -> None:
     """随包规则：普通输出（敏感度低）通过。"""
-    from pathlib import Path
-
     from ariadne.harness_module.loader import load_rule_set
-
-    _SHIPPED_RULES_DIR = (
-        Path(__file__).resolve().parents[1]
-        / "src"
-        / "ariadne"
-        / "harness_module"
-        / "rules"
-    )
 
     rules = load_rule_set(_SHIPPED_RULES_DIR)
     evaluator = compile_rule_set(rules)

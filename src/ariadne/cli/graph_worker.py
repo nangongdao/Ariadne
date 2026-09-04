@@ -13,7 +13,6 @@ import asyncio
 import logging
 import signal
 import sys
-from typing import Any
 
 from ariadne.config import Settings
 from ariadne.storage.postgres.engine import PostgresStore

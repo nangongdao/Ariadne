@@ -119,6 +119,7 @@ async def memory_pg() -> AsyncIterator[Any]:
     """
     import tempfile
     from pathlib import Path
+
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
     from ariadne.storage.postgres import (  # noqa: F401 — register tables on metadata
@@ -127,7 +128,9 @@ async def memory_pg() -> AsyncIterator[Any]:
         harness_models,
         model_config_models,
     )
-    from ariadne.storage.postgres.graph_models import GraphRun  # noqa: F401 — ensure GraphRun is registered
+    from ariadne.storage.postgres.graph_models import (
+        GraphRun,  # noqa: F401 — ensure GraphRun is registered
+    )
     from ariadne.storage.postgres.models import Base, Organization, Project
 
     # 创建临时文件数据库（测试结束后自动删除）

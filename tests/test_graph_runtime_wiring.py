@@ -213,11 +213,19 @@ class TestExecuteEndpoint:
         # 如果还是 PENDING，说明同步执行没有生效，打印详细信息
         if result["state"] == "PENDING":
             import sys
-            print(f"\n执行未完成: state={result['state']}, errors={result.get('errors')}", file=sys.stderr)
+
+            print(
+                f"\n执行未完成: state={result['state']}, "
+                f"errors={result.get('errors')}",
+                file=sys.stderr,
+            )
             # 仍然尝试轮询
             result = self._wait_for_completion(client, auth, graph_run_id, timeout=5)
 
-        assert result["state"] == "COMPLETED", f"Expected COMPLETED, got {result['state']}, errors: {result.get('errors')}"
+        assert result["state"] == "COMPLETED", (
+            f"Expected COMPLETED, got {result['state']}, "
+            f"errors: {result.get('errors')}"
+        )
         assert result["node_states"]["b"] == "completed"
 
     def test_unavailable_kinds_reported_not_hidden(
@@ -267,7 +275,11 @@ class TestExecuteEndpoint:
         assert result_data["errors"], "应该有错误信息"
         # 错误信息应该提到缺少 executor 或 rag 不可用
         errors_str = " ".join(str(e) for e in result_data["errors"])
-        assert "rag" in errors_str.lower() or "executor" in errors_str.lower() or "retriever" in errors_str.lower()
+        assert (
+            "rag" in errors_str.lower()
+            or "executor" in errors_str.lower()
+            or "retriever" in errors_str.lower()
+        )
 
     def test_missing_executor_fails_the_node_not_silently_empty(
         self, client: TestClient, auth: dict[str, str]
@@ -372,7 +384,6 @@ class TestExecuteEndpoint:
 
         # Patch GraphWorker 实例的 _execute 方法
         worker = get_graph_worker()
-        original_execute = worker._execute
 
         async def patched_execute(graph_run_id, project_id):
             from ariadne.graph_module.executor import GraphExecutor

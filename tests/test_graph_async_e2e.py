@@ -71,7 +71,7 @@ class TestGraphAsyncE2E:
 
         # 3. 轮询状态直到完成（测试模式下应该同步执行，立即完成）
         max_attempts = 50
-        for i in range(max_attempts):
+        for _ in range(max_attempts):
             status_resp = client.get(
                 f"/v1/graphs/runs/{graph_run_id}", headers=auth
             )
@@ -85,7 +85,10 @@ class TestGraphAsyncE2E:
             pytest.fail(f"Graph run 未在 {max_attempts * 0.1}s 内完成")
 
         # 4. 验证最终状态
-        assert status["state"] == "COMPLETED", f"期望 COMPLETED，实际 {status['state']}, errors: {status.get('errors')}"
+        assert status["state"] == "COMPLETED", (
+            f"期望 COMPLETED，实际 {status['state']}, "
+            f"errors: {status.get('errors')}"
+        )
         assert status["outputs"]["branch1"]["__route"] == "left"
         assert status["node_states"]["branch1"] == "completed"
         assert status["errors"] == []
@@ -138,7 +141,7 @@ class TestGraphAsyncE2E:
 
         # 轮询直到完成
         max_attempts = 50
-        for i in range(max_attempts):
+        for _ in range(max_attempts):
             status_resp = client.get(
                 f"/v1/graphs/runs/{graph_run_id}", headers=auth
             )

@@ -14,12 +14,12 @@ import {
   MarkLineComponent,
   TooltipComponent,
 } from "echarts/components";
-import * as echarts from "echarts/core";
+import { dispose, getInstanceByDom, init, registerTheme, use } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 
 import { readTokens } from "@/lib/design-tokens";
 
-echarts.use([
+use([
   PieChart,
   LineChart,
   BarChart,
@@ -80,7 +80,7 @@ export function syncChartTheme(mode: "light" | "dark"): string {
   };
 
   const name = `ariadne-${mode}`;
-  echarts.registerTheme(name, {
+  registerTheme(name, {
     // 数据色板与 CSS 的 --kind-* 对齐，图表与徽标同色即同义
     color: [t.k1, t.k2, t.k3, t.k4, t.k5, t.k6, t.k7, t.k8],
     backgroundColor: "transparent",
@@ -108,6 +108,11 @@ export function syncChartTheme(mode: "light" | "dark"): string {
   });
   return name;
 }
+
+// echarts-for-react 只用到 init / dispose / getInstanceByDom 三个成员，
+// 组装最小对象传给 ReactEChartsCore 的 echarts prop —— 保持具名导入，
+// 让 Rollup 能摇掉 core 的其余导出（graphic/time/number 等工具函数）
+const echarts = { init, dispose, getInstanceByDom };
 
 export { echarts };
 

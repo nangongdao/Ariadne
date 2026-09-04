@@ -34,7 +34,7 @@ async def test_reconcile_reclaims_and_executes_expired_run(
                 project_id=project_id,
                 name="reconcile-graph",
                 version=1,
-                graph={"version": "1", "nodes": [], "edges": []},
+                graph={"version": "1", "graph": {"version": "1", "nodes": [], "edges": []}},
                 validation_errors=[],
                 is_active=True,
                 description="",

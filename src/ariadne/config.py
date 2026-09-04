@@ -292,6 +292,15 @@ class WorkerSettings(_EnvFileSettings):
     # 几分钟被执行是可接受的代价。
     reconcile_idle_seconds: int = 300
 
+    # ---- Graph Worker（阶段 2/3）----
+
+    # Graph 租约时长（秒）。Graph 执行通常较快（分钟级），但复杂图可能
+    # 需要更长时间 —— 租约太短会让其他 Worker 在任务仍在执行时回收它。
+    graph_lease_duration_s: int = 300
+
+    # Graph 租约续期间隔（秒）。留足缓冲避免租约在长任务执行中过期。
+    graph_lease_extend_interval_s: int = 120
+
 
 class Settings(_EnvFileSettings):
     # 顶层两个字段也要前缀：不加时找的是裸 ENV / LOG_LEVEL，而 .env、compose、

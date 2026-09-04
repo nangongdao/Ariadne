@@ -45,13 +45,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# 租约时长：5 分钟（Graph 执行通常快，但复杂图可能需要更长时间）
-LEASE_DURATION_S = 300
-# 租约续期间隔：2 分钟（留足缓冲避免过期）
-LEASE_EXTEND_INTERVAL_S = 120
-# 补偿扫描间隔：1 分钟
-RECONCILE_INTERVAL_S = 60
-
 
 class GraphWorkerV2:
     """Graph 异步执行器（阶段 2：Redis 队列 + 租约机制）。
@@ -137,7 +130,9 @@ class GraphWorkerV2:
 
             # 尝试认领租约
             success = await repo.begin_lease(
-                graph_run_id, self._worker_id, LEASE_DURATION_S
+                graph_run_id,
+                self._worker_id,
+                self._settings.worker.graph_lease_duration_s,
             )
             await session.commit()
 
@@ -178,12 +173,16 @@ class GraphWorkerV2:
     ) -> None:
         """定期续约任务（后台运行）。"""
         while True:
-            await asyncio.sleep(LEASE_EXTEND_INTERVAL_S)
+            await asyncio.sleep(
+                self._settings.worker.graph_lease_extend_interval_s
+            )
             try:
                 async with tenant_session(self._pg_factory, project_id) as session:
                     repo = GraphRunRepository(session)
                     success = await repo.extend_lease(
-                        graph_run_id, self._worker_id, LEASE_DURATION_S
+                        graph_run_id,
+                        self._worker_id,
+                        self._settings.worker.graph_lease_duration_s,
                     )
                     await session.commit()
                     if success:
@@ -438,9 +437,10 @@ class GraphWorkerV2:
 
     async def _reconcile_loop(self) -> None:
         """补偿扫描循环：定期回收过期租约并重新入队。"""
+        interval = self._settings.worker.reconcile_interval_seconds
         while not self._shutdown_event.is_set():
             try:
-                await asyncio.sleep(RECONCILE_INTERVAL_S)
+                await asyncio.sleep(interval)
                 await self._reconcile()
             except asyncio.CancelledError:
                 break
@@ -474,7 +474,7 @@ class GraphWorkerV2:
                         if await repo.reclaim_expired_lease(
                             run.id,
                             self._worker_id,
-                            LEASE_DURATION_S,
+                            self._settings.worker.graph_lease_duration_s,
                         ):
                             project_claimed.append((run.id, project_id))
             except Exception:

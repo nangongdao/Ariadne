@@ -11,7 +11,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ariadne.storage.postgres.graph_models import GraphRun
@@ -228,13 +228,14 @@ class GraphRunRepository:
         """查找租约过期的运行中任务（用于补偿扫描）。
 
         返回 state=RUNNING 且 lease_expires_at < now 的任务。
+        比较交给数据库（NOW()）而非 Python datetime：SQLite/Postgres 的
+        时区语义不同，Python 侧 aware 与库内 naive 比较会 TypeError。
         """
-        now = datetime.now(UTC)
         stmt = (
             select(GraphRun)
             .where(
                 GraphRun.state == "RUNNING",
-                GraphRun.lease_expires_at < now,
+                GraphRun.lease_expires_at < func.now(),
             )
             .limit(limit)
         )
@@ -260,7 +261,7 @@ class GraphRunRepository:
             .where(
                 GraphRun.id == graph_run_id,
                 GraphRun.state == "RUNNING",
-                GraphRun.lease_expires_at < now,  # 确保仍然过期
+                GraphRun.lease_expires_at < func.now(),  # 确保仍然过期
             )
             .values(
                 worker_id=new_worker_id,

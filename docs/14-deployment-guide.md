@@ -409,6 +409,8 @@ npm run build
 | `ARIADNE_WORKER_EVAL_CONCURRENCY` | Eval 并发数 | `3` |
 | `ARIADNE_WORKER_RECONCILE_INTERVAL_SECONDS` | 补偿扫描间隔 | `60` |
 | `ARIADNE_WORKER_RECONCILE_IDLE_SECONDS` | 判定空闲阈值 | `300` |
+| `ARIADNE_WORKER_GRAPH_LEASE_DURATION_S` | Graph 租约时长（秒） | `300` |
+| `ARIADNE_WORKER_GRAPH_LEASE_EXTEND_INTERVAL_S` | Graph 租约续期间隔（秒） | `120` |
 
 ### 对象存储（可选）
 

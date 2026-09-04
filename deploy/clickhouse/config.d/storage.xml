@@ -1,0 +1,41 @@
+<!-- 冷热分层的存储策略。
+
+     必须放在服务端配置里：ClickHouse 没有 CREATE STORAGE POLICY 这种 DDL，
+     卷和磁盘只能在 config.d 声明。003_retention.sql 里的 TTL ... TO VOLUME 'cold'
+     依赖这里定义的卷名，少了这个文件那条 ALTER 会直接失败。
+
+     开发环境把 cold 指到同一块本地盘的子目录：物理上没有真的分层，但策略、卷名、
+     TTL 移动路径都是真的，能验证 DDL 正确。生产改成 S3 —— 把 cold 那段换成：
+
+       <cold>
+         <type>s3</type>
+         <endpoint>https://bucket.s3.region.amazonaws.com/ariadne-cold/</endpoint>
+         <use_environment_credentials>true</use_environment_credentials>
+       </cold>
+-->
+<clickhouse>
+    <storage_configuration>
+        <disks>
+            <cold>
+                <type>local</type>
+                <path>/var/lib/clickhouse/cold/</path>
+            </cold>
+        </disks>
+        <policies>
+            <tiered>
+                <volumes>
+                    <!-- 热卷必须叫 default，不能叫 hot：ALTER TABLE MODIFY SETTING
+                         storage_policy 要求新策略包含旧策略的全部「卷名」（不是磁盘名），
+                         已建表默认在 default 策略上、其卷名就是 default。叫 hot 会被拒：
+                         New storage policy `tiered` shall contain volumes of the old one。 -->
+                    <default>
+                        <disk>default</disk>
+                    </default>
+                    <cold>
+                        <disk>cold</disk>
+                    </cold>
+                </volumes>
+            </tiered>
+        </policies>
+    </storage_configuration>
+</clickhouse>

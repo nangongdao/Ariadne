@@ -1,0 +1,289 @@
+/* ============================================================
+   Playground —— 多模型并排试跑
+   ============================================================ */
+
+.playground-page {
+  max-width: 1280px;
+}
+
+.playground-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 312px;
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+.playground-main {
+  min-width: 0;
+}
+
+.playground-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  position: sticky;
+  top: var(--sp-5);
+}
+
+.playground-section {
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  box-shadow: var(--sheen);
+}
+
+.playground-section h3 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+
+/* 结果过期：整块压暗，避免旧数字看起来跟当前参数是一套 */
+.playground-section.is-stale {
+  border-color: var(--warn-border);
+}
+
+.playground-section.is-stale .results-grid {
+  opacity: 0.55;
+}
+
+.stale-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 2px var(--sp-2);
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius-full);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: var(--fs-2xs);
+  font-weight: 550;
+}
+
+.prompt-input {
+  width: 100%;
+  min-height: 128px;
+  background: var(--bg-sunken);
+  font-family: var(--mono);
+  font-size: var(--fs-base);
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.playground-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+}
+
+/* ---------- 模型配置卡 ---------- */
+
+.configs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(212px, 1fr));
+  gap: var(--sp-3);
+}
+
+.config-editor {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+}
+
+.config-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.config-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.config-editor .config-field {
+  margin-bottom: var(--sp-2);
+}
+
+.config-editor .config-field label {
+  font-size: var(--fs-2xs);
+}
+
+.config-editor select,
+.config-editor input[type="number"],
+.config-editor input[type="range"],
+.config-editor textarea {
+  width: 100%;
+  font-size: var(--fs-sm);
+}
+
+.config-editor textarea {
+  min-height: 34px;
+  font-size: var(--fs-xs);
+}
+
+/* 滑块 + 数值联动显示 */
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.range-value {
+  min-width: 34px;
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ---------- 结果卡 ---------- */
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(292px, 1fr));
+  gap: var(--sp-4);
+}
+
+.result-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  box-shadow: var(--sheen);
+}
+
+.result-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  font-size: var(--fs-sm);
+}
+
+.result-model {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.result-temp {
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.result-cost {
+  margin-left: auto;
+  color: var(--warn);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-output {
+  max-height: 260px;
+  background: var(--bg-sunken);
+}
+
+.result-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  color: var(--error);
+  font-size: var(--fs-sm);
+}
+
+.result-tokens {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Spec 输出 ---------- */
+
+.spec-output {
+  margin-top: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.spec-output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev2);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.spec-yaml {
+  border: none;
+  border-radius: 0;
+  max-height: 300px;
+}
+
+/* 空断言警告。放在 spec-output 内部顶端，与复制按钮同屏 —— 这份 spec
+   拿去跑 CI 会永远绿，警告必须先于复制动作被看到 */
+.spec-warning {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--warn-border);
+  background: var(--warn-soft);
+  font-size: var(--fs-xs);
+  line-height: 1.55;
+}
+
+.spec-warning > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--warn);
+}
+
+.spec-warning strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--warn);
+}
+
+.spec-warning p {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.spec-warning-list {
+  margin: var(--sp-2) 0 0;
+  padding-left: var(--sp-4);
+  color: var(--text-faint);
+}
+
+.spec-warning code {
+  font-size: var(--fs-2xs);
+}
+
+@media (max-width: 1000px) {
+  .playground-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .playground-sidebar {
+    position: static;
+  }
+}

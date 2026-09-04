@@ -1,0 +1,259 @@
+# Ariadne Helm Chart 默认值
+#
+# 三类 Worker 独立伸缩（M6 §5）：
+#   - collector：高吞吐，CPU 轻量，按 span 速率伸缩
+#   - loop：长任务，单任务分钟级，按并发 Loop 数伸缩
+#   - eval：CPU/LLM 密集，批量评测，按实验并发伸缩
+#
+# 值结构：每个组件独立配置副本数、资源、HPA、环境变量，
+# 便于按负载特征分别调优。
+
+# ---- 全局 ----
+global:
+  image:
+    repository: ariadne
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  # 存储连接。
+  #
+  # 刻意拆成 host/port/database 而不是一整条 url：src/ariadne/config.py 的
+  # ClickHouseSettings / PostgresSettings 没有 url 字段，pydantic-settings 对
+  # 无匹配字段的环境变量静默忽略 —— 写 url 不会报错，只会全部回落 localhost。
+  # DSN 由 PostgresSettings._dsn_for 拼装，顺带百分号转义凭据里的 @ : / 。
+  clickhouse:
+    host: clickhouse
+    port: 8123
+    database: ariadne
+    # 明文用户名；existingSecret 非空时改从 Secret 取（连同密码）
+    user: default
+    existingSecret: ""
+    usernameKey: username
+    passwordKey: password
+
+  postgres:
+    host: postgres
+    port: 5432
+    database: ariadne
+    # owner 凭据：有 DDL 权限，只注入迁移 Job（见 _helpers.tpl 的 pgOwnerEnv）
+    user: ariadne
+    password: ariadne
+    # 应用凭据：非 owner 角色，注入 api / worker，让 RLS 真正生效。
+    # 角色由迁移 c9d0e1f2a3b4 创建；生产务必改掉这里的默认密码，
+    # 或改用 existingSecret（明文写在 values 里会进 Helm release 记录）。
+    #
+    # 不要留空：app_dsn() 会回落 owner，而 owner 默认值与这里的 user 一致，
+    # 回落是静默成功的 —— 表现为一切正常，只是 RLS 不生效。
+    appUser: ariadne_app
+    appPassword: ariadne_app
+    existingSecret: ""
+    passwordKey: password
+    appPasswordKey: appPassword
+
+  redis:
+    # Redis 这边保留 url —— RedisSettings 确实有 url 字段，
+    # 且密码由 _fold_password_into_url 折进 URL
+    url: "redis://redis:6379/0"
+    existingSecret: ""
+    passwordKey: password
+
+  # 对象存储（S3 或 MinIO）。
+  # bucket 非空即切到 s3 后端；留空则用容器本地盘（仅单副本开发环境可接受，
+  # payload 随 Pod 重启丢失）。
+  s3:
+    bucket: ariadne-payloads
+    prefix: payloads
+    endpoint: ""  # MinIO: http://minio:9000
+    region: us-east-1
+    existingSecret: ""
+    accessKeyId: ""
+    secretAccessKey: ""
+
+# ---- API ----
+api:
+  enabled: true
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  service:
+    type: ClusterIP
+    port: 8000
+  ingress:
+    enabled: false
+    className: ""
+    hosts:
+      - host: ariadne.local
+        paths:
+          - path: /
+            pathType: Prefix
+
+# ---- Collector Worker ----
+# 高吞吐管道：批量写 ClickHouse，CPU 轻量
+# 伸缩依据：collector_lag_seconds + queue_depth
+collector:
+  enabled: true
+  replicaCount: 2
+  # 必须用 console script：`python -m ariadne.cli` 只导入模块就退出（无
+  # __main__ 块），退出码 0 —— pod 看着"跑完了"，实际什么都没做。
+  command: ["ariadne-worker", "collector"]
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 20
+    # 按 collector_lag_seconds 伸缩，见 prometheusRule
+    targetCPUUtilizationPercentage: 60
+  env:
+    ARIADNE_CH_BATCH_MAX_ROWS: "5000"
+    ARIADNE_CH_BATCH_MAX_INTERVAL_MS: "5000"
+
+# ---- Loop Worker ----
+# 长任务：单 Loop 可达分钟级，按并发数伸缩
+# 不用 CPU 利用率伸缩 —— Loop 大部分时间在等 LLM，CPU 低不代表不忙
+loop:
+  enabled: true
+  replicaCount: 3
+  command: ["ariadne-worker", "loop"]
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+  # Loop Worker 不用 CPU HPA —— 用自定义指标（pending Loop 数）伸缩
+  # 见 prometheusRule 中的 queue_pending 规则
+  hpa:
+    enabled: false
+  env:
+    ARIADNE_LLM_PROVIDER: "anthropic"
+    # 与 config.py LlmSettings.model 保持一致 —— chart 这里的覆盖值原先钉在
+    # 旧代模型，导致集群里跑的模型和代码声明的默认值不是一个
+    ARIADNE_LLM_MODEL: "claude-sonnet-5"
+
+# ---- Eval Worker ----
+# CPU + LLM 密集：批量评测，按实验并发伸缩
+# 与 Loop Worker 分离：评测不阻塞 Loop 执行
+eval:
+  enabled: true
+  replicaCount: 2
+  command: ["ariadne-worker", "eval"]
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+  env:
+    ARIADNE_LLM_PROVIDER: "anthropic"
+    ARIADNE_LLM_MODEL: "claude-sonnet-5"
+
+# ---- 迁移 Job ----
+# 每次部署前运行 ClickHouse DDL + Postgres Alembic
+migrate:
+  enabled: true
+  command: ["ariadne-migrate"]
+  restartPolicy: Never
+
+# ---- Prometheus ServiceMonitor ----
+# 让 Prometheus 自动发现 /metrics 端点
+serviceMonitor:
+  enabled: true
+  interval: 15s
+  scrapeTimeout: 10s
+  # 只抓 API 的 /metrics（Worker 也暴露但通常通过 API 聚合）
+  targetPort: 8000
+  path: /metrics
+
+# ---- PrometheusRule（SLO 告警）----
+prometheusRule:
+  enabled: true
+  groups:
+    - name: ariadne-slo
+      rules:
+        # Loop 成功率 SLO — 1h+5m 窗口 CRITICAL
+        - alert: AriadneLoopSuccessBurnRateCritical
+          expr: |
+            (
+              sum(rate(ariadne_loop_terminal_total{final_state!~"converged|stopped|budget_exceeded"}[1h]))
+              /
+              sum(rate(ariadne_loop_terminal_total[1h]))
+            ) > 0.01 * 14.4
+            and
+            (
+              sum(rate(ariadne_loop_terminal_total{final_state!~"converged|stopped|budget_exceeded"}[5m]))
+              /
+              sum(rate(ariadne_loop_terminal_total[5m]))
+            ) > 0.01 * 14.4
+          for: 2m
+          labels:
+            severity: critical
+            slo: loop_success_rate
+          annotations:
+            summary: "Loop 成功率 SLO 燃烧率超阈值（CRITICAL）"
+            description: "1h+5m 双窗口燃烧率均超过 14.4x，错误预算消耗过快"
+        # 采集可用性 SLO — 6h+30m 窗口 WARNING
+        - alert: AriadneIngestAvailabilityBurnRateWarning
+          expr: |
+            (
+              1 - (
+                sum(rate(ariadne_collector_written_total[6h]))
+                /
+                sum(rate(ariadne_collector_consumed_total[6h]))
+              )
+            ) > 0.001 * 6.0
+            and
+            (
+              1 - (
+                sum(rate(ariadne_collector_written_total[30m]))
+                /
+                sum(rate(ariadne_collector_consumed_total[30m]))
+              )
+            ) > 0.001 * 6.0
+          for: 5m
+          labels:
+            severity: warning
+            slo: ingest_availability
+          annotations:
+            summary: "采集管道可用性 SLO 燃烧率超阈值（WARNING）"
+            description: "6h+30m 双窗口燃烧率均超过 6.0x"
+        # 采集延迟告警（自监控核心指标）
+        - alert: AriadneCollectorLagHigh
+          expr: ariadne_collector_lag_seconds > 30
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "采集器消费延迟过高"
+            description: "collector_lag_seconds > 30s，可能需要扩容 collector"
+        # 队列积压告警
+        - alert: AriadneQueueDepthHigh
+          expr: ariadne_queue_depth > 10000
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Redis 队列积压"
+            description: "queue_depth > 10000 持续 5m，需要扩容 Worker"

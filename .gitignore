@@ -1,0 +1,62 @@
+# 环境与密钥 —— 绝不提交
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+settings.json
+
+# 内部工具目录
+.claude/
+.zcode/
+
+# 内部规划/审计文档 —— 不对外发布
+chubuguihua.md
+task_plan.md
+notes.md
+ui-redesign-deliverable.md
+docs/11-roadmap.md
+docs/12-audit-report.md
+docs/13-judge-wiring-assessment.md
+docs/13-llm-capability-verification.md
+docs/15-development-completion-summary.md
+docs/16-project-status-2026-09-03.md
+docs/17-future-optimization-roadmap.md
+docs/graph-stage-2-production.md
+docs/graph-stage-3-cancel-api.md
+docs/graph-stage-3-checkpoint.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 运行时数据
+data/
+*.sqlite
+*.db
+*.log
+
+# 前端
+node_modules/
+web/dist/
+
+# Playwright 临时 Chrome profile（含登录凭据/History/Cookies，绝不提交）
+web/.shots/tmp-prof-*/
+web/.shots/tp*/
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+.DS_Store

@@ -1,0 +1,243 @@
+/* ============================================================
+   浮层 —— 命令面板 / 模态框
+   ============================================================ */
+
+/* ---------- 命令面板（Ctrl+K） ---------- */
+
+.cmdk-backdrop,
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 11vh var(--sp-5) var(--sp-5);
+  /* 实心墨幕，不用毛玻璃 —— 本风格没有模糊 */
+  background: light-dark(rgb(17 17 17 / 55%), rgb(0 0 0 / 72%));
+  animation: fade-in var(--t-fast) var(--ease-out);
+}
+
+.cmdk,
+.modal {
+  width: min(580px, 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elev2);
+  box-shadow: var(--shadow-4), var(--sheen);
+  overflow: hidden;
+  animation: pop-in var(--t-med) var(--ease-spring);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+}
+
+.cmdk-input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.cmdk-input-row svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.cmdk-input-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--fs-lg);
+}
+
+.cmdk-input-row input:hover {
+  border: none;
+}
+
+.cmdk-input-row input:focus-visible {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+.cmdk-input-row .kbd {
+  flex-shrink: 0;
+}
+
+.cmdk-list {
+  max-height: 340px;
+  overflow-y: auto;
+  padding: var(--sp-2);
+}
+
+.cmdk-group-title {
+  padding: var(--sp-3) var(--sp-3) var(--sp-1);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.cmdk-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: var(--fs-base);
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out);
+}
+
+.cmdk-item svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  transition: color var(--t-fast) var(--ease-out);
+}
+
+.cmdk-item:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.cmdk-item[data-selected="true"] {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.cmdk-item[data-selected="true"] svg {
+  color: var(--accent);
+}
+
+.cmdk-hint {
+  margin-left: auto;
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+}
+
+.cmdk-empty {
+  padding: var(--sp-8) var(--sp-5);
+  text-align: center;
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+}
+
+.cmdk-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-3) var(--sp-5);
+  border-top: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+}
+
+.cmdk-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+/* ---------- 模态框 ---------- */
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  max-height: 82vh;
+}
+
+.modal-wide {
+  width: min(1040px, 100%);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: var(--sp-5);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* 三选项对话框：破坏动作居左，主操作居右，避免顺手点中 */
+.modal-narrow {
+  width: min(420px, 100%);
+}
+
+.dialog-text {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.modal-foot-split {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+/* ---------- 侧边栏命令入口 ---------- */
+
+.sidebar-cmdk {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+  justify-content: flex-start;
+}
+
+.sidebar-cmdk:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-hover);
+  color: var(--text-dim);
+}
+
+.sidebar-cmdk .kbd {
+  margin-left: auto;
+}

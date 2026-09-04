@@ -1,0 +1,232 @@
+/* ============================================================
+   应用壳层 —— 侧边栏 / 内容区 / 移动端抽屉
+   ============================================================ */
+
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* ---------- 侧边栏 ---------- */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-4);
+  border-right: 1px solid var(--border);
+  background: var(--bg-sunken);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* 品牌区：底部细线分开导航，品牌标用品牌色圆角块 */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 产品名粗体，一眼可读 */
+.brand-name {
+  font-family: var(--sans);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.1;
+}
+
+.brand-sub {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.nav-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* 分组标题：小号等宽大写标签 */
+.nav-group-title {
+  padding: 0 var(--sp-2) var(--sp-2);
+  margin-bottom: var(--sp-1);
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  /* 44px 触控高度：移动端可点区域达标 */
+  min-height: 36px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: var(--fs-base);
+  font-weight: 500;
+  text-decoration: none;
+  /* 只过渡颜色与背景：动 padding 会引发布局重排 */
+  transition:
+    color var(--t-fast) var(--ease-out),
+    background var(--t-fast) var(--ease-out);
+}
+
+.nav-link:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+  text-decoration: none;
+}
+
+.nav-link svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  transition: color var(--t-fast) var(--ease-out);
+}
+
+.nav-link:hover svg {
+  color: var(--text-dim);
+}
+
+/* 当前栏目：品牌色软底 + 加粗，左侧红色圆角指示条 */
+.nav-link.active {
+  color: var(--text);
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+
+.nav-link.active svg {
+  color: var(--accent);
+}
+
+.nav-link.active:hover {
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.nav-link.active:hover svg {
+  color: var(--accent);
+}
+
+.nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- 内容区 ---------- */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.content-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* ---------- 移动端抽屉 ---------- */
+
+.nav-toggle {
+  display: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: var(--z-drawer);
+    width: min(var(--sidebar-w), 82vw);
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-4);
+    transform: translateX(-101%);
+    transition: transform var(--t-med) var(--ease-out);
+  }
+
+  .sidebar.open {
+    transform: none;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-drawer) - 1);
+    border: none;
+    background: light-dark(rgb(17 17 17 / 55%), rgb(0 0 0 / 70%));
+    animation: fade-in var(--t-fast) var(--ease-out);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}

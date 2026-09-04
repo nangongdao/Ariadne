@@ -1,0 +1,389 @@
+/* ============================================================
+   Trace 详情 —— 调用树 / 时间轴（Span 抽屉见 span-detail.css）
+   ------------------------------------------------------------
+   注意：.tree-row / .timeline-row 由虚拟滚动绝对定位并内联 height
+   （34 / 27），此处不得再声明 height/position，否则滚动位置会错位。
+   ============================================================ */
+
+.trace-detail-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: var(--sp-5) var(--sp-6);
+  gap: var(--sp-3);
+  overflow: hidden;
+}
+
+.trace-title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  gap: var(--sp-4);
+  flex: 1;
+  min-height: 0;
+}
+
+.detail-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  overflow: hidden;
+}
+
+/* ---------- 调用树 ---------- */
+
+.trace-tree {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.tree-toolbar,
+.timeline-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev2);
+  flex-shrink: 0;
+}
+
+.toolbar-check {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+/* 失败总数徽标：不勾选也能看到树里有没有失败，用错误色而非中性灰 */
+.toolbar-count {
+  display: inline-flex;
+  align-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--error) 18%, transparent);
+  color: var(--error);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  justify-content: center;
+}
+
+.toolbar-hint {
+  margin-left: auto;
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.tree-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  /* 提示浏览器这里会频繁滚动，交给合成层 */
+  contain: strict;
+}
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease-out);
+}
+
+.tree-row:hover {
+  background: var(--bg-hover);
+}
+
+.tree-row.selected {
+  background: var(--accent-soft);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* 焦点环走 inset 阴影：行铺满宽度，outline 会被滚动容器的 paint containment 切掉 */
+.tree-row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* 同时选中时保留左侧强调条，两条阴影叠加 */
+.tree-row.selected:focus-visible {
+  box-shadow: inset 2px 0 0 var(--accent), inset 0 0 0 2px var(--accent);
+}
+
+/* 关键路径加粗而非仅换色，避免与状态色语义冲突 */
+.tree-row.critical .tree-name {
+  font-weight: 650;
+}
+
+.tree-row.row-error .tree-name {
+  color: var(--error);
+}
+
+.tree-indent {
+  flex-shrink: 0;
+}
+
+.tree-toggle,
+.tree-toggle-placeholder {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  min-height: 18px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-faint);
+}
+
+.tree-toggle:hover {
+  background: none;
+  border: none;
+  color: var(--accent);
+}
+
+.tree-toggle svg {
+  transition: transform var(--t-fast) var(--ease-out);
+}
+
+.tree-toggle[data-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+.tree-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-model {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+}
+
+.tree-metrics {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-left: auto;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+}
+
+.metric-time {
+  min-width: 52px;
+  text-align: right;
+}
+
+.metric-token {
+  min-width: 44px;
+  text-align: right;
+}
+
+.metric-cost {
+  min-width: 56px;
+  text-align: right;
+  color: var(--warn);
+}
+
+.metric-id {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+}
+
+/* ---------- 时间轴 ---------- */
+
+.timeline {
+  --timeline-label-w: 240px;
+
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.timeline-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* 末尾刻度标签居中后会右溢，横向不给滚动条 */
+  overflow-x: hidden;
+  contain: paint;
+}
+
+/* 吸顶刻度尺。height 由 TSX 内联（= 虚拟化 scrollMargin），此处不声明 */
+.timeline-axis {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: grid;
+  grid-template-columns: var(--timeline-label-w) 1fr;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev2);
+}
+
+.axis-scale {
+  position: relative;
+  grid-column: 2;
+}
+
+.axis-tick {
+  position: absolute;
+  top: var(--sp-1);
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.timeline-row {
+  display: grid;
+  grid-template-columns: var(--timeline-label-w) 1fr;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--t-fast) var(--ease-out);
+}
+
+.timeline-row:hover {
+  background: var(--bg-hover);
+}
+
+.timeline-row.selected {
+  background: var(--accent-soft);
+}
+
+.timeline-row.row-error .label-text {
+  color: var(--error);
+}
+
+.timeline-label {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 100%;
+  min-height: 0;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  text-align: left;
+  overflow: hidden;
+  justify-content: flex-start;
+}
+
+.timeline-label:hover {
+  background: none;
+  border: none;
+  color: var(--text);
+}
+
+/* 同 .tree-row：焦点环内缩，否则被滚动容器裁掉 */
+.timeline-label:focus-visible,
+.timeline-bar:focus-visible {
+  outline-offset: -2px;
+}
+
+.label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeline-track {
+  position: relative;
+  height: 100%;
+  border-left: 1px solid var(--border);
+}
+
+.timeline-bar {
+  position: absolute;
+  top: 5px;
+  height: 16px;
+  min-width: 3px;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--sp-1);
+  border: none;
+  border-radius: var(--radius-xs);
+  opacity: 0.86;
+  overflow: hidden;
+  transition: opacity var(--t-fast) var(--ease-out);
+}
+
+.timeline-bar:hover {
+  border: none;
+  opacity: 1;
+}
+
+.bar-duration {
+  font-size: 9px;
+  font-weight: 650;
+  color: var(--bg);
+  white-space: nowrap;
+}
+
+.bar-llm {
+  background: var(--kind-llm);
+}
+.bar-tool {
+  background: var(--kind-tool);
+}
+.bar-rag {
+  background: var(--kind-rag);
+}
+.bar-code {
+  background: var(--kind-code);
+}
+.bar-loop {
+  background: var(--kind-loop);
+}
+.bar-harness {
+  background: var(--kind-harness);
+}
+.bar-eval {
+  background: var(--kind-eval);
+}
+.bar-internal {
+  background: var(--kind-internal);
+}
+
+@media (max-width: 1100px) {
+  /* 窄屏三列塌成单列，Span 抽屉的高度约束见 span-detail.css */
+  .detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+

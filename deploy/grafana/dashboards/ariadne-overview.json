@@ -1,0 +1,311 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Ariadne — AI 工作流质量保障与可观测性平台总览面板",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "row",
+      "title": "Loop 闭环",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "id": 1,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Loop 终态分布",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 1},
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum by (final_state) (increase(ariadne_loop_terminal_total[1h]))",
+          "legendFormat": "{{final_state}}",
+          "refId": "A"
+        }
+      ],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "orientation": "auto", "textMode": "auto"}
+    },
+    {
+      "type": "timeseries",
+      "title": "Loop 迭代轮次分布",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 6, "w": 12, "x": 6, "y": 1},
+      "id": 3,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum(rate(ariadne_loop_iterations_bucket[5m])) by (le, mode))",
+          "legendFormat": "p50 ({{mode}})",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ariadne_loop_iterations_bucket[5m])) by (le, mode))",
+          "legendFormat": "p95 ({{mode}})",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+    },
+    {
+      "type": "timeseries",
+      "title": "Loop 成本（USD）",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 6, "w": 6, "x": 18, "y": 1},
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum(rate(ariadne_loop_cost_usd_sum[1h])) by (model)",
+          "legendFormat": "{{model}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "currencyusd"}, "overrides": []}
+    },
+    {
+      "type": "row",
+      "title": "采集管道",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 7},
+      "id": 5,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "采集延迟（秒）— 自监控核心指标",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "id": 6,
+      "targets": [
+        {
+          "expr": "ariadne_collector_lag_seconds",
+          "legendFormat": "lag",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "thresholds": {"mode": "absolute", "steps": [
+        {"color": "green", "value": null},
+        {"color": "yellow", "value": 10},
+        {"color": "red", "value": 30}
+      ]}
+    },
+    {
+      "type": "timeseries",
+      "title": "采集吞吐（spans/s）",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "id": 7,
+      "targets": [
+        {
+          "expr": "sum(rate(ariadne_collector_consumed_total[1m]))",
+          "legendFormat": "consumed",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(ariadne_collector_written_total[1m]))",
+          "legendFormat": "written",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(ariadne_collector_sampled_out_total[1m]))",
+          "legendFormat": "sampled_out",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "cps"}, "overrides": []}
+    },
+    {
+      "type": "row",
+      "title": "队列与 Worker",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 16},
+      "id": 8,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Redis 队列深度",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 7, "w": 12, "x": 0, "y": 17},
+      "id": 9,
+      "targets": [
+        {
+          "expr": "ariadne_queue_depth{stream=~\"q:span|q:loop|q:eval\"}",
+          "legendFormat": "{{stream}}",
+          "refId": "A"
+        },
+        {
+          "expr": "ariadne_queue_pending{stream=~\"q:span|q:loop|q:eval\"}",
+          "legendFormat": "{{stream}} (pending)",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "LLM 请求延迟（p50/p95）",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 7, "w": 12, "x": 12, "y": 17},
+      "id": 10,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum(rate(ariadne_llm_request_duration_seconds_bucket[5m])) by (le, model))",
+          "legendFormat": "p50 ({{model}})",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ariadne_llm_request_duration_seconds_bucket[5m])) by (le, model))",
+          "legendFormat": "p95 ({{model}})",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}
+    },
+    {
+      "type": "row",
+      "title": "评测与 API",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 24},
+      "id": 11,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "评测分数分布",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 25},
+      "id": 12,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum(rate(ariadne_eval_score_bucket[5m])) by (le, evaluator))",
+          "legendFormat": "p50 ({{evaluator}})",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ariadne_eval_score_bucket[5m])) by (le, evaluator))",
+          "legendFormat": "p95 ({{evaluator}})",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "API 请求延迟（p50/p99）",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 25},
+      "id": 13,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum(rate(ariadne_api_request_duration_seconds_bucket[5m])) by (le, path))",
+          "legendFormat": "p50 ({{path}})",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(ariadne_api_request_duration_seconds_bucket[5m])) by (le, path))",
+          "legendFormat": "p99 ({{path}})",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}
+    },
+    {
+      "type": "row",
+      "title": "SLO 与 GDPR",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 33},
+      "id": 14,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Loop 成功率（SLO 99%）",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 34},
+      "id": 15,
+      "targets": [
+        {
+          "expr": "sum(rate(ariadne_loop_terminal_total{final_state=~\"converged|stopped|budget_exceeded\"}[1h])) / sum(rate(ariadne_loop_terminal_total[1h]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "thresholds": {"mode": "absolute", "steps": [
+        {"color": "red", "value": null},
+        {"color": "yellow", "value": 0.98},
+        {"color": "green", "value": 0.99}
+      ]}}, "overrides": []}
+    },
+    {
+      "type": "stat",
+      "title": "采集可用性（SLO 99.9%）",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 6, "w": 8, "x": 8, "y": 34},
+      "id": 16,
+      "targets": [
+        {
+          "expr": "sum(rate(ariadne_collector_written_total[1h])) / sum(rate(ariadne_collector_consumed_total[1h]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "thresholds": {"mode": "absolute", "steps": [
+        {"color": "red", "value": null},
+        {"color": "yellow", "value": 0.998},
+        {"color": "green", "value": 0.999}
+      ]}}, "overrides": []}
+    },
+    {
+      "type": "stat",
+      "title": "GDPR 删除任务",
+      "datasource": {"type": "prometheus", "uid": "$DS_PROMETHEUS"},
+      "gridPos": {"h": 6, "w": 8, "x": 16, "y": 34},
+      "id": 17,
+      "targets": [
+        {
+          "expr": "sum(increase(ariadne_gdpr_deletion_total[24h])) by (status)",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "orientation": "auto", "textMode": "auto"}
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["ariadne", "ai-workflow", "observability"],
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {"text": "Prometheus", "value": "Prometheus"},
+        "hide": 0,
+        "label": "Prometheus DataSource",
+        "query": "prometheus"
+      }
+    ]
+  },
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Ariadne Platform Overview",
+  "uid": "ariadne-overview",
+  "version": 1,
+  "weekStart": ""
+}

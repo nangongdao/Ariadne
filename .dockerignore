@@ -1,0 +1,17 @@
+# 构建上下文瘦身：这些绝不该进镜像
+.venv/
+web/node_modules/
+web/dist/
+.git/
+data/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+docs/
+examples/
+tests/

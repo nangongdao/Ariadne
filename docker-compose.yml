@@ -1,0 +1,130 @@
+name: ariadne
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8-alpine
+    environment:
+      CLICKHOUSE_DB: ariadne
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+      # Docker Desktop 把宿主代理变量注入每个容器。entrypoint 的就绪轮询
+      # （entrypoint.sh: wget --spider http://127.0.0.1:8123/ping）用 busybox
+      # wget —— 它读 http_proxy 却不认 no_proxy，连 127.0.0.1 也发给代理并拿回
+      # 502，于是初始化用的临时 server（只绑 loopback）永远等不到就绪，绑
+      # 0.0.0.0 的正式 server 从不启动：容器外一律连不上。置空是让 wget 直连的
+      # 唯一办法。ClickHouse 自身不需要出网。
+      http_proxy: ""
+      https_proxy: ""
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+    ports:
+      - "${ARIADNE_CH_HTTP_HOST_PORT:-8123}:8123"   # HTTP
+      - "${ARIADNE_CH_NATIVE_HOST_PORT:-9000}:9000" # native
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      # 只挂单个文件，不挂整个 config.d：整目录挂载会遮掉镜像自带的
+      # docker_related_config.xml，那里面的 <listen_host>0.0.0.0</listen_host>
+      # 是容器外能连上的唯一原因，丢了它谁也访问不到。
+      - ./deploy/clickhouse/config.d/storage.xml:/etc/clickhouse-server/config.d/storage.xml:ro
+      - ./deploy/clickhouse/config.d/custom_settings.xml:/etc/clickhouse-server/config.d/custom_settings.xml:ro
+    healthcheck:
+      # -Y off：显式关代理。即便上面的置空被别处覆盖，探针也不会误判成不健康。
+      test: ["CMD", "wget", "-Y", "off", "--spider", "-q", "http://127.0.0.1:8123/ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ariadne
+      POSTGRES_USER: ariadne
+      POSTGRES_PASSWORD: ${ARIADNE_PG_PASSWORD:-ariadne}
+    ports:
+      # 宿主侧端口可改：开发机上常已有原生 PostgreSQL 占着 5432，
+      # 端口冲突会让 compose 起不来。容器内始终是 5432，服务名互访不受影响。
+      - "${ARIADNE_PG_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ariadne -d ariadne"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  redis:
+    image: redis:7.4-alpine
+    # appendonly：队列里未 ACK 的消息在重启后仍需保留
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy noeviction
+    ports:
+      # 同上：原生 Redis 常占 6379。且 Windows 原生移植版多为 3.x，
+      # 没有 Streams（5.0 才有），queue.py 的 xadd/xreadgroup 用不了 —— 必须用容器这个。
+      - "${ARIADNE_REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  migrate:
+    build: .
+    command: ["ariadne-migrate"]
+    environment: &backend-env
+      ARIADNE_CH_HOST: clickhouse
+      ARIADNE_CH_PORT: "8123"
+      ARIADNE_PG_HOST: postgres
+      ARIADNE_PG_PASSWORD: ${ARIADNE_PG_PASSWORD:-ariadne}
+      # API/Worker 使用迁移创建的非 owner 角色，确保 PostgreSQL RLS 真正生效。
+      # 生产部署必须通过环境变量覆盖默认开发密码。
+      ARIADNE_PG_APP_USER: ${ARIADNE_PG_APP_USER:-ariadne_app}
+      ARIADNE_PG_APP_PASSWORD: ${ARIADNE_PG_APP_PASSWORD:-ariadne_app}
+      ARIADNE_REDIS_URL: redis://redis:6379/0
+      ARIADNE_API_STATIC_API_KEY: ${ARIADNE_API_KEY:-ak_local_dev_key}
+      ARIADNE_LOG_LEVEL: INFO
+      # 后端要保留代理（worker 得出网调 LLM），只把内部服务排除掉。Docker Desktop
+      # 注入的 NO_PROXY 不含 clickhouse，少了它 clickhouse_connect 会把 DDL 发给代理。
+      # api 也在列表里：真机验收发现容器内按服务名调 API（http://api:8000）会被
+      # 代理劫持返回 502。这里不依赖宿主的代理配置，显式声明一份。
+      no_proxy: localhost,127.0.0.1,clickhouse,postgres,redis,api
+      NO_PROXY: localhost,127.0.0.1,clickhouse,postgres,redis,api
+    depends_on:
+      clickhouse: { condition: service_healthy }
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: "no"
+
+  api:
+    build: .
+    command: ["ariadne-api"]
+    environment: *backend-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import httpx,sys; sys.exit(0 if httpx.get('http://localhost:8000/health').status_code==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  worker:
+    build: .
+    command: ["ariadne-worker"]
+    environment: *backend-env
+    volumes:
+      - payload-data:/app/data
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    # Worker 是吞吐型，可独立横向扩：docker compose up -d --scale worker=3
+    deploy:
+      replicas: 1
+
+volumes:
+  clickhouse-data:
+  postgres-data:
+  redis-data:
+  payload-data:

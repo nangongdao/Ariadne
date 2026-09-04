@@ -1,0 +1,27 @@
+[package]
+name = "ariadne-desktop"
+version = "0.1.0"
+description = "Ariadne — AI 工作流质量保障与可观测平台（桌面端）"
+authors = ["Ariadne Project"]
+edition = "2021"
+
+# Tauri 模板默认 ["staticlib", "cdylib", "rlib"] 是为了移动端目标；
+# 纯桌面应用只用 rlib——cdylib 会导出全部符号，MinGW ld 的 16 位
+# 导出序号上限（65535）装不下 windows-rs 的 9 万+ 符号。
+[lib]
+name = "ariadne_desktop_lib"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+codegen-units = 1
+lto = true
+strip = true

@@ -1,0 +1,316 @@
+/* ============================================================
+   徽标与状态
+   ------------------------------------------------------------
+   状态一律"颜色 + 文字"双通道，不单靠颜色传达含义（色盲可用）。
+   ============================================================ */
+
+/* 语义变体也进基础选择器：badge-good / badge-warn 这些名字读起来就是一个完整
+   徽标，调用处普遍只写变体不写 .badge。变体只管配色的话，那些地方会渲染成
+   没有边框和内边距的裸文字 —— 与其去改十几个调用点，不如让名字名副其实 */
+.badge,
+.badge-good,
+.badge-warn,
+.badge-info,
+.badge-danger,
+.tag,
+.flag,
+.state-tag,
+.kind-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 2px var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-elev2);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.tag-sm {
+  padding: 1px var(--sp-2);
+  font-size: var(--fs-2xs);
+}
+
+.tag-list {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+/* ---------- 语义变体 ---------- */
+
+.badge-good,
+.badge.ok,
+.tag-ok {
+  border-color: var(--ok-border);
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.badge-warn,
+.badge.warn,
+.tag-warn {
+  border-color: var(--warn-border);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.badge-info,
+.badge.info {
+  border-color: var(--info-border);
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.tag-danger,
+.badge-danger {
+  border-color: var(--error-border);
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.badge-default {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ---------- 成本/性能标记 ---------- */
+
+.flag-cost {
+  border-color: var(--warn-border);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.flag-slow {
+  border-color: var(--blocked);
+  background: color-mix(in srgb, var(--kind-harness) 12%, transparent);
+  color: var(--blocked);
+}
+
+/* ---------- 数据类型徽标（与图表色板同源） ---------- */
+
+.kind-llm {
+  border-color: color-mix(in srgb, var(--kind-llm) 40%, transparent);
+  background: color-mix(in srgb, var(--kind-llm) 12%, transparent);
+  color: var(--kind-llm);
+}
+.kind-tool {
+  border-color: color-mix(in srgb, var(--kind-tool) 40%, transparent);
+  background: color-mix(in srgb, var(--kind-tool) 12%, transparent);
+  color: var(--kind-tool);
+}
+.kind-rag {
+  border-color: color-mix(in srgb, var(--kind-rag) 40%, transparent);
+  background: color-mix(in srgb, var(--kind-rag) 12%, transparent);
+  color: var(--kind-rag);
+}
+.kind-code {
+  border-color: color-mix(in srgb, var(--kind-code) 40%, transparent);
+  background: color-mix(in srgb, var(--kind-code) 12%, transparent);
+  color: var(--kind-code);
+}
+.kind-loop {
+  border-color: color-mix(in srgb, var(--kind-loop) 40%, transparent);
+  background: color-mix(in srgb, var(--kind-loop) 12%, transparent);
+  color: var(--kind-loop);
+}
+.kind-harness {
+  border-color: color-mix(in srgb, var(--kind-harness) 40%, transparent);
+  background: color-mix(in srgb, var(--kind-harness) 12%, transparent);
+  color: var(--kind-harness);
+}
+.kind-eval {
+  border-color: color-mix(in srgb, var(--kind-eval) 40%, transparent);
+  background: color-mix(in srgb, var(--kind-eval) 12%, transparent);
+  color: var(--kind-eval);
+}
+.kind-internal {
+  border-color: color-mix(in srgb, var(--kind-internal) 40%, transparent);
+  background: color-mix(in srgb, var(--kind-internal) 12%, transparent);
+  color: var(--kind-internal);
+}
+
+/* ---------- Loop 状态标签 ---------- */
+
+/* 执行中：品牌青 + 呼吸点，一眼区分"还在跑"与"已结束" */
+.state-created,
+.state-validate,
+.state-planning,
+.state-precheck,
+.state-executing,
+.state-evaluating,
+.state-judging,
+.state-revising {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.state-executing::before,
+.state-evaluating::before,
+.state-judging::before,
+.state-revising::before,
+.state-planning::before,
+.state-validate::before,
+.state-precheck::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: currentcolor;
+  animation: pulse 1.8s var(--ease-out) infinite;
+}
+
+/* 待人工：警示色，需要人来处理 */
+.state-human_pending {
+  border-color: var(--warn-border);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+/* 达标 */
+.state-converged {
+  border-color: var(--ok-border);
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+/* 资源耗尽类：可调参重试 */
+.state-budget_exceeded,
+.state-max_iterations,
+.state-stalled {
+  border-color: var(--warn-border);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+/* 失败类 */
+.state-failed,
+.state-blocked {
+  border-color: var(--error-border);
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+/* 中性终态 */
+.state-rejected,
+.state-cancelled {
+  border-color: var(--border-strong);
+  background: var(--bg-elev3);
+  color: var(--text-faint);
+}
+
+/* ---------- 得分徽标 ---------- */
+
+.score-badge {
+  display: inline-block;
+  min-width: 46px;
+  padding: 2px var(--sp-3);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-sm);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.score-badge-pass {
+  background: var(--ok-soft);
+  color: var(--ok);
+  box-shadow: inset 0 0 0 1px var(--ok-border);
+}
+
+.score-badge-fail {
+  background: var(--error-soft);
+  color: var(--error);
+  box-shadow: inset 0 0 0 1px var(--error-border);
+}
+
+/* ---------- 内联状态文字 ---------- */
+
+.inline-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  color: var(--ok);
+  font-size: var(--fs-sm);
+}
+
+.status-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-sm);
+}
+
+.failed-ids {
+  color: var(--error);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+/* 失败断言明细：id + hint + 证据，逐条竖排，证据超长省略 */
+.failed-assertions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-xs);
+}
+
+.failed-assertions li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.failed-id {
+  color: var(--error);
+  overflow-wrap: anywhere;
+}
+
+.failed-hint {
+  color: var(--text-dim);
+}
+
+.failed-evidence {
+  max-width: 420px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 非系统指标行内小字：faithfulness 等不挤掉对齐的补充信息 */
+.extra-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: 2px;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+}
+
+.extra-metrics span {
+  white-space: nowrap;
+}
+
+.validation-ok {
+  color: var(--ok);
+}
+.validation-issues {
+  color: var(--warn);
+}
+.validation-fail {
+  color: var(--error);
+}

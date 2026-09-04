@@ -1,0 +1,311 @@
+/* ============================================================
+   页面骨架 —— 面包屑 / 标题区 / 统计条 / 分区
+   ============================================================ */
+
+.page {
+  padding: var(--sp-6) var(--sp-7) var(--sp-8);
+  max-width: 1480px;
+  animation: page-in var(--t-med) var(--ease-out);
+}
+
+/* 需要占满高度的页面（Trace 详情、图编辑器、终端） */
+.page-full {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: var(--sp-5) var(--sp-6);
+  overflow: hidden;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ---------- 面包屑 ---------- */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-faint);
+}
+
+.breadcrumb a {
+  color: var(--text-dim);
+}
+
+.breadcrumb a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.breadcrumb svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.breadcrumb [aria-current="page"] {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ---------- 标题区 ----------
+   粗体大标题 + 品牌红标记条，底部细分隔线。 */
+
+.page-head,
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.page-head-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.page-title,
+.page-head h1,
+.page-header h1 {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: 0;
+  font-family: var(--sans);
+  font-size: var(--fs-display);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.15;
+  /* 长任务名不撑破布局 */
+  overflow-wrap: anywhere;
+}
+
+/* 标题前的品牌红标记：圆角竖条 */
+.page-title::before,
+.page-head h1::before,
+.page-header h1::before {
+  content: "";
+  width: 5px;
+  align-self: stretch;
+  min-height: 24px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
+
+.page-sub,
+.page-subtitle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+
+/* 分隔点 */
+.sub-sep {
+  width: 3px;
+  height: 3px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--text-faint);
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.section-header,
+.models-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-3);
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+/* ---------- 实时指示 ---------- */
+
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 2px var(--sp-3);
+  border: 1px solid var(--ok-border);
+  border-radius: var(--radius-full);
+  background: var(--ok-soft);
+  color: var(--ok);
+  font-size: var(--fs-xs);
+  font-weight: 550;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--ok);
+  animation: pulse 1.8s var(--ease-out) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+
+/* ---------- 统计条 ----------
+   数据卡：圆角 + 细边框 + 柔和投影。数字大而标签小，
+   扫一眼先读到数，再决定要不要读标签。 */
+
+.stat-row,
+.stat-cards,
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-5);
+}
+
+.stat-card,
+.summary-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-1);
+}
+
+.stat-label,
+.summary-stats dt {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--text-faint);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.stat-value,
+.summary-stats dd,
+.cost-value {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.15;
+}
+
+/* 表格里的成本列不放大：那里是密集数据，跟着行高走 */
+.data-table .cost-value {
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* 重点卡：品牌色软底 + 左侧色条，醒目但不刺眼 */
+.stat-card.highlight {
+  border-left: 4px solid var(--accent);
+  background: var(--accent-softer);
+}
+
+.stat-card.highlight .stat-value {
+  color: var(--accent);
+}
+
+.stat-hint {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+/* ---------- 紧凑统计片 ---------- */
+
+.stat-chips {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+}
+
+.stat-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-elev);
+  font-size: var(--fs-sm);
+}
+
+.stat-chip-label {
+  color: var(--text-faint);
+}
+
+.stat-chip-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 统计口径。不做 chip 样式：它是这一组的定语，长得一样会被当成第五个指标 */
+.stat-chips-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.stat-chips-link {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: var(--sp-5) var(--sp-4) var(--sp-7);
+  }
+
+  .page-full {
+    padding: var(--sp-4);
+  }
+
+  .page-title,
+  .page-head h1,
+  .page-header h1 {
+    font-size: var(--fs-lg);
+  }
+}

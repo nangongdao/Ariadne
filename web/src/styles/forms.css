@@ -1,0 +1,359 @@
+/* ============================================================
+   表单控件
+   ------------------------------------------------------------
+   圆角输入框：细边框 + 沉底背景，聚焦时边框转品牌色 + 软光晕。
+   输入用等宽字体，让 ID / 命令 / 代码类内容对齐好读。
+   ============================================================ */
+
+input,
+select,
+textarea {
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  transition:
+    border-color var(--t-fast) var(--ease-out),
+    box-shadow var(--t-fast) var(--ease-out);
+}
+
+input:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: var(--border-focus);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-faint);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input[readonly],
+input:read-only {
+  color: var(--text-dim);
+  background: var(--bg-elev2);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+select {
+  cursor: pointer;
+  /* 留出原生箭头空间 */
+  padding-right: var(--sp-6);
+}
+
+/* 勾选框：方形，选中填墨。accent-color 让原生控件跟随主题 */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  accent-color: var(--text);
+  cursor: pointer;
+}
+
+input[type="range"] {
+  padding: 0;
+  border: none;
+  background: transparent;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* 数字输入右对齐，便于比对量级 */
+input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 字段组 ---------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.field-label,
+.label-text {
+  font-size: var(--fs-xs);
+  font-weight: 550;
+  color: var(--text-dim);
+}
+
+.field-hint {
+  margin-left: var(--sp-2);
+  color: var(--text-faint);
+  font-weight: 400;
+  font-size: var(--fs-2xs);
+}
+
+/* 输入框下方的整句说明。与 .field-hint 分开：那个是贴在 label 右侧的短标注，
+   这里要换行成句，共用会被 margin-left 顶歪 */
+.field-note {
+  margin: var(--sp-1) 0 0;
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  line-height: 1.5;
+}
+
+.field > input,
+.field > select,
+.field > textarea {
+  width: 100%;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--sp-4);
+}
+
+.field-check {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.field-check input {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* 错误就近显示，并留出图标位 */
+.form-error,
+.model-form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  margin: 0;
+  color: var(--error);
+  font-size: var(--fs-sm);
+}
+
+/* ---------- 筛选栏 ---------- */
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+}
+
+.filter-bar label {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* label 与控件是兄弟而非包裹关系（htmlFor 才能生效），由这层负责并排 */
+.filter-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.filter-field.grow {
+  flex: 1;
+  min-width: 180px;
+}
+
+.filter-field.grow input {
+  width: 100%;
+}
+
+/* 动作按钮推到行尾，筛选项换行时不会被夹在中间 */
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-left: auto;
+}
+
+/* 截断提示紧跟表格，不用 margin-bottom 撑开页尾 */
+.truncate-note {
+  margin: var(--sp-3) 0 0;
+}
+
+.filter-select {
+  min-height: 30px;
+  padding: 0 var(--sp-6) 0 var(--sp-3);
+  font-size: var(--fs-sm);
+}
+
+.key-form {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.key-form .field {
+  flex: 1;
+  min-width: 220px;
+}
+
+/* ---------- 模型配置页 ---------- */
+
+/* 主行动放宽到 44px，满足触控目标下限 */
+.btn-tall {
+  min-height: 44px;
+  padding: 0 var(--sp-5);
+}
+
+.model-form-footer .btn-primary {
+  min-height: 44px;
+}
+
+/* 卡片网格改成语义列表，去掉列表标记 */
+.model-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.model-grid > li {
+  display: flex;
+  min-width: 0;
+}
+
+.model-grid > li > .model-card {
+  flex: 1;
+  min-width: 0;
+}
+
+/* dt/dd 的排版：原规则只命中 span:first-child，dl 化后需要显式声明 */
+.model-card-fields dt {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-shrink: 0;
+  min-width: 68px;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+}
+
+.model-card-fields dd {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin: 0;
+  min-width: 0;
+}
+
+.model-card-fields dd.mono {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-field-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* provider 标签：色彩之外靠文字本身区分，不做唯一状态通道 */
+.model-provider {
+  margin-left: auto;
+  padding: 2px var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-elev2);
+  color: var(--text-dim);
+  font-size: var(--fs-2xs);
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+.model-provider-openai {
+  border-color: var(--ok-border);
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.model-provider-anthropic {
+  border-color: var(--warn-border);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.model-provider-openai_compatible {
+  border-color: var(--info-border);
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.copy-btn {
+  flex-shrink: 0;
+}
+
+.copy-ok {
+  color: var(--ok);
+}
+
+/* ---------- 删除二次确认 ---------- */
+
+.delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: auto;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--error-border);
+  animation: delete-confirm-in var(--t-fast) var(--ease-out);
+}
+
+.delete-confirm-text {
+  display: flex;
+  margin: 0;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: var(--sp-2);
+  justify-content: flex-end;
+}
+
+@keyframes delete-confirm-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

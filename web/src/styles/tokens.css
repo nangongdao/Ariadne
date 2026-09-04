@@ -1,0 +1,178 @@
+/* ============================================================
+   设计令牌 —— 全站唯一的取值来源
+   ------------------------------------------------------------
+   设计语言：**编辑现代风**（Newsprint 的圆润化演进）。保留报纸式的
+   高对比结构 —— 反白表头、分栏竖线、大写等宽标签、克制的社论红 ——
+   但几何换成圆角与柔和抬升，字体换成粗体 Noto Sans SC，醒目而友好。
+
+   双主题：日间是"新闻纸"（暖白纸 + 墨黑字），夜间是"印厂校样"
+   （墨黑纸 + 纸白字）。两套值用 CSS `light-dark()` 写在同一行，
+   令牌层因此**没有重复定义** —— 改一处即两个主题同时生效。
+   切换由 <html data-theme> 驱动，缺省跟随系统（见 useTheme）。
+
+   注意：社论红在深色下必须提亮。#CC0000 在墨底上只有 2.6:1，
+   达不到 AA；夜间用 #FF5A4E（约 6:1）。
+   ============================================================ */
+
+:root {
+  /* 让 light-dark() 与原生控件（滚动条、表单）都跟随主题 */
+  color-scheme: light dark;
+
+  /* ---- 纸与墨：层次靠"纸的白度"区分，不靠亮度抬升 ---- */
+  --bg: light-dark(#f7f7f4, #141412);
+  --bg-sunken: light-dark(#efefe9, #0b0b0a);
+  --bg-elev: light-dark(#ffffff, #1c1c19);
+  --bg-elev2: light-dark(#f4f4f0, #232320);
+  --bg-elev3: light-dark(#e9e9e2, #2b2b27);
+  --bg-hover: light-dark(#f0f0ea, #262622);
+  --bg-active: light-dark(#e5e5e0, #30302b);
+
+  /* ---- 结构线 ----
+     border 是细线：密集重复元素（表格行、卡片内分隔）用它。
+     border-strong 是重线：反白表头、当前栏目、焦点环用它。 */
+  --border: light-dark(#e2e2da, #2f2f2a);
+  --border-strong: light-dark(#111111, #e8e8e0);
+  --border-focus: light-dark(#111111, #e8e8e0);
+
+  /* ---- 文字：纸上 17:1 / 7.6:1 / 5.1:1，墨上 16:1 / 7.2:1 / 4.8:1 ---- */
+  --text: light-dark(#111111, #f2f2ed);
+  --text-dim: light-dark(#4f4f4f, #a8a89e);
+  --text-faint: light-dark(#6f6f6f, #82827a);
+
+  /* ---- 社论红：唯一的强调色，只用于主行动、当前标记与悬停 ---- */
+  --accent: light-dark(#d92d20, #ff6b5e);
+  --accent-strong: light-dark(#b42318, #ff8a7f);
+  --accent-dim: light-dark(#7a271f, #c53a30);
+  --accent-soft: light-dark(rgb(217 45 32 / 10%), rgb(255 107 94 / 16%));
+  --accent-softer: light-dark(rgb(217 45 32 / 5%), rgb(255 107 94 / 8%));
+  /* 平面设计无渐变需求时退化为纯色；令牌名保留以免调用点报错 */
+  --accent-grad: light-dark(#d92d20, #ff6b5e);
+  /* 红底上的文字色 */
+  --accent-ink: light-dark(#ffffff, #1a0e0c);
+
+  /* ---- 语义状态：纸上够深、墨上够亮，均过 AA ---- */
+  --ok: light-dark(#1a7f37, #4ac26b);
+  --ok-soft: light-dark(rgb(26 127 55 / 10%), rgb(74 194 107 / 15%));
+  --ok-border: light-dark(rgb(26 127 55 / 45%), rgb(74 194 107 / 40%));
+  --warn: light-dark(#8a6100, #e0a72b);
+  --warn-soft: light-dark(rgb(138 97 0 / 10%), rgb(224 167 43 / 15%));
+  --warn-border: light-dark(rgb(138 97 0 / 45%), rgb(224 167 43 / 40%));
+  --error: light-dark(#d92d20, #ff6b5e);
+  --error-soft: light-dark(rgb(217 45 32 / 10%), rgb(255 107 94 / 15%));
+  --error-border: light-dark(rgb(217 45 32 / 45%), rgb(255 107 94 / 40%));
+  --info: light-dark(#0550ae, #6cabff);
+  --info-soft: light-dark(rgb(5 80 174 / 10%), rgb(108 171 255 / 15%));
+  --info-border: light-dark(rgb(5 80 174 / 45%), rgb(108 171 255 / 40%));
+  --blocked: light-dark(#bc4c00, #f0883e);
+
+  /* ---- 数据色板（节点/阶段编码，勿与语义色混用）----
+     纸上用深油墨保证 AA，墨上提亮到同等可读度。 */
+  --kind-llm: light-dark(#0550ae, #6cabff);
+  --kind-tool: light-dark(#6639ba, #b083f0);
+  --kind-rag: light-dark(#1a7f37, #4ac26b);
+  --kind-code: light-dark(#8a6100, #e0a72b);
+  --kind-loop: light-dark(#bf3989, #f778ba);
+  --kind-harness: light-dark(#bc4c00, #f0883e);
+  --kind-eval: light-dark(#1b7c83, #56d4dd);
+  --kind-internal: light-dark(#57606a, #8b949e);
+
+  /* ---- 字体 ----
+     Noto Sans SC 为主力：中文渲染清晰、字重齐全，标题用 700-800
+     做到醒目。Inter 排在后面承接拉丁字符与数字（等宽数字更整齐）。
+     mono 承担数据与标签。全部经 @fontsource 自托管：桌面端（Tauri）
+     离线可用，也不给第三方 CDN 送用户 IP。 */
+  --sans: "Noto Sans SC Variable", "Inter Variable", system-ui,
+    -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  --mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular,
+    "Cascadia Code", Consolas, monospace;
+
+  /* ---- 字号比例尺 ----
+     控制台是高密度数据界面：正文保持紧凑基准，
+     display / hero 两档供报头级标题。 */
+  --fs-2xs: 10px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 26px;
+  --fs-display: 30px;
+  --fs-hero: 40px;
+
+  /* ---- 字距：中文不宜拉太开，标签适度放开即可 ---- */
+  --tracking-tight: -0.015em;
+  --tracking-label: 0.08em;
+
+  /* ---- 间距比例尺（4 的倍数为主） ---- */
+  --sp-1: 4px;
+  --sp-2: 6px;
+  --sp-3: 8px;
+  --sp-4: 12px;
+  --sp-5: 16px;
+  --sp-6: 20px;
+  --sp-7: 24px;
+  --sp-8: 32px;
+  --sp-9: 40px;
+
+  /* ---- 圆角：圆润友好的几何 ---- */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 999px;
+
+  /* ---- 阴影：柔和分层抬升，不用硬投影 ---- */
+  --shadow-1: 0 1px 2px light-dark(rgb(23 23 23 / 6%), rgb(0 0 0 / 40%));
+  --shadow-2: 0 2px 8px light-dark(rgb(23 23 23 / 8%), rgb(0 0 0 / 45%));
+  --shadow-3: 0 8px 24px light-dark(rgb(23 23 23 / 12%), rgb(0 0 0 / 55%));
+  --shadow-4: 0 20px 48px light-dark(rgb(23 23 23 / 16%), rgb(0 0 0 / 65%));
+  /* 悬停抬升：卡片被"拿起来"的感觉 */
+  --shadow-pop: 0 6px 20px light-dark(rgb(23 23 23 / 14%), rgb(0 0 0 / 55%));
+  --glow-accent: 0 0 0 3px var(--accent-soft);
+  /* 面板顶部 1px 高光，营造"受光"感 */
+  --sheen: inset 0 1px 0 light-dark(rgb(255 255 255 / 70%), rgb(255 255 255 / 4%));
+
+  /* ---- 纸纹：极淡的 4×4 网点，让大面积底色不像纯色块 ---- */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23111111' fill-opacity='0.03' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'/%3E%3C/svg%3E");
+
+  /* ---- 动效：150-240ms，标准缓出 ---- */
+  --t-fast: 140ms;
+  --t-med: 200ms;
+  --t-slow: 280ms;
+  --ease-out: cubic-bezier(0.22, 0.85, 0.3, 1);
+  --ease-spring: cubic-bezier(0.2, 1.1, 0.35, 1);
+
+  /* ---- 层级：显式尺度，避免 z-index 军备竞赛 ---- */
+  --z-raised: 1;
+  --z-sticky: 10;
+  --z-drawer: 30;
+  --z-overlay: 40;
+  --z-toast: 50;
+
+  /* ---- 骨架尺寸 ---- */
+  --sidebar-w: 216px;
+  --topbar-h: 48px;
+}
+
+/* 显式主题：覆盖系统偏好。color-scheme 一改，
+   上面所有 light-dark() 与原生控件同时切换。 */
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* 深色下纸纹要用亮墨，否则黑上加黑等于没有 */
+[data-theme="dark"] {
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23f2f2ed' fill-opacity='0.035' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23f2f2ed' fill-opacity='0.035' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'/%3E%3C/svg%3E");
+  }
+}

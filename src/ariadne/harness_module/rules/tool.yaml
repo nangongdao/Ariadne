@@ -1,0 +1,99 @@
+# 工具类规则 —— pre_tool 卡点。
+# 命令白名单、危险命令黑名单、网络访问限制。
+# 这是沙箱外的第一道防线（M4 §5.1：所有出站调用必经卡点）。
+
+rules:
+  # 命令白名单：只允许安全命令 → block 其余
+  #
+  # 这份名单**刻意与 ExecPolicy.DEFAULT_ALLOWED_COMMANDS 保持一致**，不比它更窄。
+  # 原先只列 pytest|ruff|mypy|node|tsc|npm test|npx vitest，比第一层窄，后果是
+  # `go test ./...` / `cargo test` / `jest --ci` / `eslint src/` / `python -m pytest`
+  # 全被这条规则拦掉 —— 而这些命令第一层是放行的。Go/Rust/Jest 项目的每条
+  # COMMAND 断言都会 errored，Loop 永远无法验证收敛（实测 15 条良性命令误报 7 条）。
+  #
+  # 那这条规则还有什么用？它的价值不在"更窄"，而在**可配置 + 有审计**：
+  # ExecPolicy 是源码常量，这条规则来自 spec.yaml，租户可以按需收紧；
+  # 且规则命中会写 AuditRecord，白名单拒绝只产出一条 errored 断言。
+  # 具体的危险载荷交给下面几条黑名单规则（那才是这层真正补的东西）。
+  - id: tool-command-whitelist
+    category: tool
+    hook: pre_tool
+    when: '!regex_match(tool.cmd, "^(pytest|ruff|mypy|python[0-9.]*|node|npm|npx|tsc|eslint|vitest|jest|go|cargo)\\b")'
+    action: block
+    severity: critical
+    message: "命令不在白名单内，已拦截"
+
+  # 解释器的 eval 类开关 → block
+  # node/python 在白名单内（要跑测试就得放行），但 `-e` / `--eval` / `-c`
+  # 让它们变成任意代码执行入口。ExecPolicy 已用 _check_python_args 限住
+  # python（只允许 -m 白名单模块），但对 node 没有等价限制：
+  # `node --eval "require('child_process').execSync(...)"` 过第一层。
+  # 载荷里恰好含 rm -rf 时会被 tool-dangerous-rmrf 撞上，但那是碰巧 ——
+  # `node --eval` 本身才是要拦的东西。
+  - id: tool-interpreter-eval
+    category: tool
+    hook: pre_tool
+    when: 'regex_match(tool.cmd, "^node\\b.*\\s(-e|--eval|-p|--print)\\b") || regex_match(tool.cmd, "^python[0-9.]*\\b.*\\s-c\\b")'
+    action: block
+    severity: critical
+    message: "解释器 -e/--eval/-c 等同任意代码执行，已拦截"
+
+  # 危险命令黑名单：rm -rf / fork bomb / dd / 权限提升 → block
+  - id: tool-dangerous-rmrf
+    category: tool
+    hook: pre_tool
+    when: 'regex_match(tool.cmd, "(?i)rm\\s+-rf\\s+/") || regex_match(tool.cmd, "(?i)rm\\s+-rf\\s+~") || regex_match(tool.cmd, "(?i)rm\\s+-rf\\s+\\*")'
+    action: block
+    severity: critical
+    message: "检测到 rm -rf 危险路径，已拦截"
+
+  - id: tool-dangerous-fork-bomb
+    category: tool
+    hook: pre_tool
+    # 真实 fork bomb 形如 `:(){ :|:& };:` —— 花括号和空白是语法必需的。
+    # 原表达式写成 `:():|:&};:`（无花括号、无空白），匹配不到任何真实输入。
+    # \s* 覆盖各种排版变体，字符类不能省转义：( ) { } | 在正则里都是元字符。
+    when: 'regex_match(tool.cmd, ":\\(\\)\\s*\\{\\s*:\\|:\\s*&\\s*\\}\\s*;\\s*:") || regex_match(tool.cmd, "fork\\s+bomb")'
+    action: block
+    severity: critical
+    message: "检测到 fork bomb，已拦截"
+
+  - id: tool-dangerous-privilege
+    category: tool
+    hook: pre_tool
+    when: 'regex_match(tool.cmd, "(?i)sudo\\s") || regex_match(tool.cmd, "(?i)su\\s+-") || regex_match(tool.cmd, "(?i)chmod\\s+777")'
+    action: block
+    severity: critical
+    message: "检测到提权命令，已拦截"
+
+  # 云元数据端点访问：169.254.169.254 → block（容器逃逸拿凭证的常见路径）
+  - id: tool-metadata-endpoint
+    category: tool
+    hook: pre_tool
+    when: 'regex_match(tool.cmd, "169\\.254\\.169\\.254") || regex_match(tool.cmd, "(?i)metadata\\.google\\.internal")'
+    action: block
+    severity: critical
+    message: "检测到云元数据端点访问，已拦截"
+
+  # dd 命令（可能覆写磁盘）→ block
+  - id: tool-dangerous-dd
+    category: tool
+    hook: pre_tool
+    when: 'regex_match(tool.cmd, "(?i)\\bdd\\s+if=")'
+    action: block
+    severity: critical
+    message: "检测到 dd 命令，已拦截"
+
+  # 工具结果过大 → warn（post_tool 卡点，观察先行）
+  #
+  # pre_tool 查命令本身，查不到输出。结果大小上限属于 docs/04 第 3 节
+  # post_tool 的典型规则：同一命令跑出 1MB 输出（抓日志、吐整个仓库）
+  # 会拉爆上下文预算。设为 warn 而非 block —— 新建规则先观察命中情况
+  #（docs/M4 5.3），确认阈值合理后再收紧。
+  - id: tool-result-huge
+    category: tool
+    hook: post_tool
+    when: 'tool.result.size() > 200000'
+    action: warn
+    severity: medium
+    message: "命令输出超过 200KB，结果可能过大，建议人工复查"

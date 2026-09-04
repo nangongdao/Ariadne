@@ -1,0 +1,35 @@
+# 资源类规则 —— 所有卡点。
+# 预算/成本/轮次/并发等资源上限。通过 ctx.loop 访问 Loop 状态。
+
+rules:
+  # Token 预算上限：已用 token 超预算 90% → block（留 10% 给收尾）
+  # ctx.loop.budget_used / ctx.loop.budget_limit 由 engine 填入（整型）
+  # double() 不可省：CEL 的 IntType 与 DoubleType 无隐式提升，
+  # 整型 * 0.9 会 "found no matching overload" → fail-closed 无条件命中
+  - id: resource-token-budget
+    category: resource
+    hook: pre_model
+    when: 'ctx.loop.budget_limit > 0 && double(ctx.loop.budget_used) > double(ctx.loop.budget_limit) * 0.9'
+    action: block
+    severity: critical
+    message: "Token 预算已用 90%，拒绝下一轮调用"
+
+  # 成本上限：累计成本超过上限 → block
+  # ctx.loop.cost_usd / cost_limit 由 engine 填入（浮点，美元）
+  # 与 0.0 比而非 0：契约里这两个键是 float，跟整型字面量比会无重载报错
+  - id: resource-cost-cap
+    category: resource
+    hook: post_model
+    when: 'ctx.loop.cost_limit > 0.0 && ctx.loop.cost_usd > ctx.loop.cost_limit'
+    action: block
+    severity: high
+    message: "累计成本超过上限"
+
+  # 轮次上限：接近最大轮次 → warn（让 engine 有机会收尾）
+  - id: resource-iteration-warn
+    category: resource
+    hook: pre_model
+    when: 'ctx.loop.max_iterations > 0 && ctx.loop.iteration >= ctx.loop.max_iterations - 1'
+    action: warn
+    severity: medium
+    message: "已接近最大轮次，这是最后一轮"

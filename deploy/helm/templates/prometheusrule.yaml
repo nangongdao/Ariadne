@@ -1,0 +1,21 @@
+{{/* PrometheusRule：SLO 燃烧率告警 + 自监控告警
+   M6 §9 验收项 #7：错误预算告警带归因。
+
+   多窗口燃烧率（Google SRE 双窗口模式）：
+     - 1h + 5m 窗口同时超阈值 → CRITICAL
+     - 6h + 30m 窗口同时超阈值 → WARNING
+
+   告警标签含 slo 名 + severity，Alertmanager 路由到不同渠道。
+*/}}
+{{- if .Values.prometheusRule.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "ariadne.fullname" (dict "Release" .Release "componentName" "rules") }}
+  labels:
+    {{- include "ariadne.labels" (dict "Chart" .Chart "Release" .Release "componentName" "rules") | nindent 4 }}
+spec:
+  groups:
+    {{- toYaml .Values.prometheusRule.groups | nindent 4 }}
+{{- end }}

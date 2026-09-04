@@ -1,0 +1,28 @@
+# 真机验收的 compose 覆盖：跳过 node 构建阶段，直接用验收镜像。
+#
+# 背景：当前宿主到 docker.io 的拉取被网络挡住（DNS 污染），且 Docker
+# Desktop 的宿主端口转发故障 —— 验收全部在容器网络内进行（docker exec /
+# docker run），不依赖宿主端口映射。见 Dockerfile.acceptance 的说明。
+#
+# 用法：
+#   docker build -f Dockerfile.acceptance -t ariadne-backend:dev .
+#   docker compose -f docker-compose.yml -f docker-compose.acceptance.yml up -d
+#
+# 端到端测试在容器内跑（Redis 库 15 做隔离）。tests/ 被 .dockerignore
+# 排除、不在镜像里，挂载宿主仓库跑：
+#   docker compose -f docker-compose.yml -f docker-compose.acceptance.yml \
+#     run --rm --no-deps -v "$(pwd)/tests:/app/tests:ro" \
+#     -e ARIADNE_REDIS_URL=redis://redis:6379/15 \
+#     -e ARIADNE_CH_HOST=clickhouse -e ARIADNE_PG_HOST=postgres \
+#     worker python -m pytest -m integration -q
+
+services:
+  migrate:
+    image: ariadne-backend:dev
+    build: !reset null
+  api:
+    image: ariadne-backend:dev
+    build: !reset null
+  worker:
+    image: ariadne-backend:dev
+    build: !reset null

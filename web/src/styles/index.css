@@ -1,0 +1,34 @@
+/* ============================================================
+   Ariadne 控制台设计系统 —— 入口
+   ------------------------------------------------------------
+   设计语言：深色开发者工具风。深板岩底色按层次抬升，品牌青
+   （"阿里阿德涅之线"）为唯一强调色，数据色板独立于语义状态色。
+   状态一律"颜色 + 文字/图标"双通道，满足色盲可用性；正文对比度
+   按 WCAG AA（≥4.5:1）。动效只动 transform/opacity，140-320ms，
+   统一在 base.css 里响应 prefers-reduced-motion。
+
+   导入顺序即层叠顺序，后者可覆盖前者，但不应依赖覆盖：
+   令牌 → 基础 → 骨架 → 通用组件 → 页面专属。
+   ============================================================ */
+
+@import "./tokens.css";
+@import "./base.css";
+
+@import "./shell.css";
+@import "./topbar.css";
+@import "./page.css";
+
+@import "./buttons.css";
+@import "./forms.css";
+@import "./table.css";
+@import "./badges.css";
+@import "./cards.css";
+@import "./feedback.css";
+@import "./overlay.css";
+
+@import "./trace.css";
+@import "./span-detail.css";
+@import "./loop.css";
+@import "./graph.css";
+@import "./playground.css";
+@import "./terminal.css";

@@ -1,0 +1,10 @@
+# 项目级 crates 镜像（仅作用于本 Tauri 工程，不影响全局）。
+# rsproxy（字节）sparse 协议，国内拉取 crates.io 稳定。
+[source.crates-io]
+replace-with = "rsproxy-sparse"
+
+[source.rsproxy-sparse]
+registry = "sparse+https://rsproxy.cn/index/"
+
+[registries.rsproxy]
+index = "sparse+https://rsproxy.cn/index/"

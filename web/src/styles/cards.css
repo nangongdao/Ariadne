@@ -1,0 +1,236 @@
+/* ============================================================
+   卡片 / 面板 / 图表容器
+   ------------------------------------------------------------
+   圆润卡片：细边框 + 柔和投影 + 圆角。悬停轻微抬升并加深投影，
+   制造"拿起来"的层次感（只动 transform 与 box-shadow）。
+   ============================================================ */
+
+.panel,
+.card {
+  padding: var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-1);
+}
+
+/* ---------- 图表卡片 ---------- */
+
+.chart-card {
+  margin: 0;
+  padding: var(--sp-4) var(--sp-5) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-1);
+  min-width: 0;
+}
+
+/* 图表标题：小号粗体标签 + 细分隔线 */
+.chart-card-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.chart-canvas {
+  min-width: 0;
+}
+
+/* ---------- 模型卡片网格 ---------- */
+
+/* 只留 .model-grid（ModelCardGrid 的实际类名）。
+   这里原先还并列了 `.models`，但没有任何模型卡片用那个名字 ——
+   它唯一匹配到的是 Trace 表格里的 `<td class="models">`，把每个模型
+   标签撑成 272px 的网格单元（表格里那一列因此糊成整行方块）。
+   同名不同物的类名要拆开，否则一处改样式会伤到另一处。 */
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  gap: var(--sp-4);
+}
+
+.model-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-1);
+  transition:
+    border-color var(--t-fast) var(--ease-out),
+    transform var(--t-fast) var(--ease-out),
+    box-shadow var(--t-fast) var(--ease-out);
+}
+
+/* 悬停抬升：轻微上浮 + 加深投影，层次感而非"硬剪贴" */
+.model-card:hover {
+  border-color: var(--border-focus);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-pop);
+}
+
+/* 默认配置：左侧品牌色条 + 品牌软底，一眼可认 */
+.model-card.is-default {
+  border-left: 4px solid var(--accent);
+  background: var(--accent-softer);
+}
+
+.model-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.model-card-title,
+.model-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+  min-width: 0;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-card-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+
+.model-field {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.model-field > span:first-child {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+}
+
+.model-field .mono {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-card-foot {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: auto;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- 模型表单 ---------- */
+
+.model-form {
+  max-width: 580px;
+  margin-bottom: var(--sp-6);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg-elev2);
+  box-shadow: var(--shadow-2), var(--sheen);
+}
+
+.model-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.model-form-header h2 {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.model-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+}
+
+.model-form-error {
+  margin: 0 var(--sp-5) var(--sp-4);
+}
+
+.model-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- 卡片入场：交错抬升 ---------- */
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.model-grid > *,
+.stat-row > *,
+.stat-cards > * {
+  animation: rise-in var(--t-slow) var(--ease-out) backwards;
+}
+
+.model-grid > *:nth-child(2),
+.stat-row > *:nth-child(2),
+.stat-cards > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+.model-grid > *:nth-child(3),
+.stat-row > *:nth-child(3),
+.stat-cards > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+.model-grid > *:nth-child(4),
+.stat-row > *:nth-child(4),
+.stat-cards > *:nth-child(4) {
+  animation-delay: 120ms;
+}
+.model-grid > *:nth-child(5) {
+  animation-delay: 160ms;
+}
+.model-grid > *:nth-child(n + 6) {
+  animation-delay: 200ms;
+}
+
+@media (max-width: 720px) {
+  .model-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .model-form {
+    max-width: 100%;
+  }
+}

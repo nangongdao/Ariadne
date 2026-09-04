@@ -1,0 +1,1 @@
+const r=[{label:"1 小时",hours:1},{label:"24 小时",hours:24},{label:"7 天",hours:168},{label:"30 天",hours:720},{label:"90 天",hours:2160}],s=24,n=2160;function o(e){const l=r.find(a=>a.hours===e);return l?l.label:e%24===0?`${e/24} 天`:`${e} 小时`}export{s as D,n as M,r as T,o as f};

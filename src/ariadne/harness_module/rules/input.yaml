@@ -1,0 +1,34 @@
+# 输入类规则 —— pre_model 卡点。
+# 检查进入 LLM 的内容：PII 泄漏、prompt injection、输入长度。
+# 默认 action 为 warn（docs/M4 5.3）：先观察命中再收紧。
+
+rules:
+  # PII 检测：输入中含邮箱/电话/SSN/信用卡/IP 等敏感信息 → block
+  - id: input-pii-block
+    category: input
+    hook: pre_model
+    when: 'detect_pii(input.text).size() > 0'
+    action: block
+    severity: high
+    message: "输入含 PII（邮箱/电话/SSN/信用卡/IP），已拦截"
+
+  # Prompt injection：宿主侧 detect_injection() 做规范化 + 词法族匹配 → block
+  # 从三条字面短语正则换成内置函数（选型理由见 docs/M4-spec.md 第 7 节）：
+  # 正则在原始文本上比字面短语，零宽字符/同形字/换行/间隔字符任一即可绕过。
+  - id: input-prompt-injection
+    category: input
+    hook: pre_model
+    when: 'detect_injection(input.text).size() > 0'
+    action: block
+    severity: critical
+    message: "检测到 prompt injection 模式，已拦截"
+
+  # 输入长度上限：超长输入可能撑爆上下文或触发 DoS → warn
+  # 默认 50000 字符（约 12500 token），可按场景调整
+  - id: input-length-warn
+    category: input
+    hook: pre_model
+    when: 'token_count(input.text) > 12500'
+    action: warn
+    severity: medium
+    message: "输入超过 12500 token，可能截断或增加成本"

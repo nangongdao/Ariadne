@@ -1,0 +1,41 @@
+# 验收用后端镜像（不含前端构建阶段）。
+#
+# 存在理由：完整 Dockerfile 的阶段 1 要 FROM node:22-slim，而当前网络环境
+# 拉 docker.io 基础镜像会被 DNS 污染挡住（宿主可到 PyPI 但不可到
+# registry-1.docker.io）。本机已有 python:3.12-slim-bookworm，容器内可到
+# PyPI —— 用它装依赖即可在容器网络内完成 Compose 真机验收（迁移/API/
+# Worker/集成测试），完全不依赖宿主端口转发。
+#
+# 与生产镜像的差异：多拷 tests/（验收要跑 pytest -m integration），
+# 无 web/dist（API 的静态托管在该目录缺失时按配置降级）。
+# 用法：
+#   docker build -f Dockerfile.acceptance -t ariadne-backend:dev .
+#   docker compose -f docker-compose.yml -f docker-compose.acceptance.yml up -d
+
+FROM python:3.12-slim-bookworm
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# alembic.ini 不在 wheel 里（hatch 只打包 src/），迁移入口按工作目录找它。
+# 注意 .dockerignore 排除了 tests/，COPY tests 会失败 —— 用
+# docker build 的本地上下文没法绕过，这里改为不拷 tests，
+# 集成测试改用挂载方式跑（见 docker-compose.acceptance.yml 注释）。
+COPY pyproject.toml README.md alembic.ini ./
+COPY src/ ./src/
+COPY deploy/ ./deploy/
+
+RUN pip install --no-cache-dir ".[server]" pytest pytest-asyncio httpx
+
+# 非 root 运行（与生产镜像一致）
+RUN useradd --create-home --uid 10001 ariadne \
+    && mkdir -p /app/data \
+    && chown -R ariadne:ariadne /app
+USER ariadne
+
+EXPOSE 8000
+
+CMD ["ariadne-api"]

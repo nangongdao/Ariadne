@@ -1,0 +1,40 @@
+# 输出类规则 —— post_model / pre_persist 卡点。
+# 检查 LLM 的输出：引用要求、格式校验、敏感泄漏。
+
+rules:
+  # 引用计数下限：输出应有足够引用支撑 → warn（不硬拦，交给评测判收敛）
+  - id: output-citation-floor
+    category: output
+    hook: post_model
+    when: 'count_citations(output.text) < 1 && token_count(output.text) > 200'
+    action: warn
+    severity: medium
+    message: "输出超过 200 token 但无引用，可能缺乏来源支撑"
+
+  # JSON 格式校验：声称输出 JSON 但格式无效 → block
+  # 用 output.format == "json" 作为前提（调用方在 context 里声明期望格式）
+  - id: output-json-invalid
+    category: output
+    hook: post_model
+    when: 'output.format == "json" && !json_valid(output.text)'
+    action: block
+    severity: high
+    message: "输出声称 JSON 但格式无效"
+
+  # 敏感信息泄漏：输出中含 PII → block（LLM 不应泄漏训练数据中的 PII）
+  - id: output-pii-leak
+    category: output
+    hook: post_model
+    when: 'detect_pii(output.text).size() > 0'
+    action: block
+    severity: critical
+    message: "输出含 PII，可能泄漏敏感信息"
+
+  # 敏感度评分过高 → warn（阈值可调）
+  - id: output-sensitive-high
+    category: output
+    hook: pre_persist
+    when: 'sensitive_score(output.text) > 0.7'
+    action: warn
+    severity: medium
+    message: "输出敏感度评分 > 0.7，建议人工复查后再持久化"

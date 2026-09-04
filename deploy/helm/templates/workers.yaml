@@ -1,0 +1,67 @@
+{{/* 三类 Worker 独立伸缩 Deployment + HPA
+   collector / loop / eval 各自独立 Deployment，独立 HPA，独立资源配置。
+
+   M6 §5：三类 Worker 按负载特征分别伸缩：
+     - collector：CPU 轻量，按 span 速率（collector_lag_seconds）伸缩
+     - loop：长任务，按并发 Loop 数（queue_pending）伸缩
+     - eval：CPU 密集，按 CPU 利用率伸缩
+*/}}
+{{- $workers := dict "collector" .Values.collector "loop" .Values.loop "eval" .Values.eval -}}
+{{- range $name, $config := $workers -}}
+{{- if $config.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ariadne.fullname" (dict "Release" $.Release "componentName" $name) }}
+  labels:
+    {{- include "ariadne.labels" (dict "Chart" $.Chart "Release" $.Release "componentName" $name) | nindent 4 }}
+spec:
+  replicas: {{ $config.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ariadne.selectorLabels" (dict "Release" $.Release "componentName" $name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ariadne.selectorLabels" (dict "Release" $.Release "componentName" $name) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ $name }}
+          image: {{ include "ariadne.image" $ | quote }}
+          imagePullPolicy: {{ $.Values.global.image.pullPolicy }}
+          command:
+            {{- toYaml $config.command | nindent 12 }}
+          env:
+            {{- include "ariadne.storageEnv" $ | nindent 12 }}
+            {{- range $k, $v := $config.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml $config.resources | nindent 12 }}
+{{- if $config.hpa.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "ariadne.fullname" (dict "Release" $.Release "componentName" $name) }}
+  labels:
+    {{- include "ariadne.labels" (dict "Chart" $.Chart "Release" $.Release "componentName" $name) | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "ariadne.fullname" (dict "Release" $.Release "componentName" $name) }}
+  minReplicas: {{ $config.hpa.minReplicas | default $config.replicaCount }}
+  maxReplicas: {{ $config.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $config.hpa.targetCPUUtilizationPercentage }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,236 @@
+/* ============================================================
+   基础层 —— reset、排版、焦点、滚动条、动效降级
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Inter 的字符变体：更易读的 a/g/l/1 与等宽数字下标 */
+  font-feature-settings: "cv02" 1, "cv03" 1, "cv04" 1, "cv11" 1, "ss01" 1;
+  overflow: hidden;
+}
+
+/* 纸纹：4×4 网点铺满，模拟新闻纸颗粒。
+   固定定位不参与滚动，避免每帧重绘；透明度极低，只在大面积留白处
+   隐约可见 —— 目的是让底色不像"纯色块"，不是让人看见网点。 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--paper-grain);
+  background-repeat: repeat;
+}
+
+/* ---- 标题排版 ----
+   Noto Sans SC 粗体：醒目、现代。字距微收让大字更挺。 */
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--sans);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.2;
+  text-wrap: balance;
+  color: var(--text);
+}
+
+h1 {
+  font-size: var(--fs-2xl);
+}
+h2 {
+  font-size: var(--fs-xl);
+}
+h3 {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+h4 {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--text);
+  text-decoration: none;
+  text-underline-offset: 3px;
+  transition: color var(--t-fast) var(--ease-out);
+}
+
+/* 链接悬停转社论红 + 粗下划线，是本风格的招牌交互 */
+a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--accent);
+}
+
+.mono {
+  font-family: var(--mono);
+  font-variant-ligatures: none;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+}
+
+.small {
+  font-size: var(--fs-sm);
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 只给读屏器的文本：视觉上不可见，但仍在无障碍树里。
+   用于图标按钮的可访问名 —— 不能用 display:none，那会一并从
+   无障碍树移除。 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- 报纸式元数据标签 ----
+   大写 + 宽字距 + 等宽，用于版块标签、栏目名、统计口径说明。
+   这是 Newsprint 里除标题外辨识度最高的排版元素。 */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* 装饰性分隔：报纸版块之间的花饰 */
+.ornament {
+  padding: var(--sp-5) 0;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: var(--fs-lg);
+  letter-spacing: 1em;
+  color: var(--text-faint);
+  user-select: none;
+}
+
+.ok {
+  color: var(--ok);
+}
+.warn {
+  color: var(--warn);
+}
+.danger,
+.error-text {
+  color: var(--error);
+}
+.primary {
+  color: var(--accent);
+}
+.link-strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.link-strong:hover {
+  color: var(--accent);
+}
+
+/* 可复制值：悬停变色 + 按下反馈 */
+.copyable {
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease-out);
+}
+.copyable:hover {
+  color: var(--accent);
+}
+.copyable:active {
+  color: var(--accent-strong);
+}
+
+/* 焦点环：键盘可见、鼠标不打扰。品牌色 + 圆角，与整体几何一致 */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* 滚动条：圆头细轨 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-faint) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-faint);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+  background-clip: content-box;
+}
+
+/* 动效降级：一处收口，组件层不必各自处理 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

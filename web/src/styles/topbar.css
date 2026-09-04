@@ -1,0 +1,243 @@
+/* ============================================================
+   顶部上下文条 —— 当前位置 / 环境状态 / 全局搜索入口
+   ------------------------------------------------------------
+   解决"不知道自己在哪、后端是否健康"的问题：位置与环境状态常驻，
+   不必进设置页才能确认连通性。
+   ============================================================ */
+
+/* 顶栏：细线分隔，不用毛玻璃（性能与简洁优先） */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--topbar-h);
+  flex-shrink: 0;
+  padding: 0 var(--sp-6);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* 当前位置：粗体，一眼可读 */
+.topbar-loc {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  font-family: var(--sans);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+}
+
+.topbar-loc svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.topbar-loc span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 全局搜索触发器：视觉上像输入框，实际是按钮 */
+.topbar-search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: min(260px, 30vw);
+  height: 30px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  color: var(--text-faint);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--t-fast) var(--ease-out),
+    background var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out);
+}
+
+.topbar-search:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-elev2);
+  color: var(--text-dim);
+}
+
+.topbar-search svg {
+  flex-shrink: 0;
+}
+
+.topbar-search .kbd {
+  margin-left: auto;
+}
+
+/* ---------- 环境状态指示 ---------- */
+
+.env-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 26px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color var(--t-fast) var(--ease-out);
+}
+
+.env-pill:hover {
+  border-color: var(--border-strong);
+}
+
+.env-pill.is-ok {
+  border-color: var(--ok-border);
+}
+
+.env-pill.is-degraded {
+  border-color: var(--warn-border);
+}
+
+.env-pill.is-down {
+  border-color: var(--error-border);
+}
+
+/* 状态点：颜色之外还有文字标签，不单靠颜色传达 */
+.env-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--text-faint);
+}
+
+.env-pill.is-ok .env-dot {
+  background: var(--ok);
+}
+
+.env-pill.is-degraded .env-dot {
+  background: var(--warn);
+}
+
+.env-pill.is-down .env-dot {
+  background: var(--error);
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    padding: 0 var(--sp-4);
+    gap: var(--sp-3);
+  }
+
+  .topbar-search {
+    width: auto;
+    padding: 0 var(--sp-2);
+  }
+
+  /* 窄屏隐藏文字提示，只留放大镜；kbd 在触屏无意义 */
+  .topbar-search span,
+  .topbar-search .kbd {
+    display: none;
+  }
+
+  .env-pill span:not(.env-dot) {
+    display: none;
+  }
+}
+
+/* ---------- 主题切换 ----------
+   三态分段控件：圆角胶囊容器，选中项用品牌色软底 + 加粗图标。 */
+
+.theme-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-elev);
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 不低于 28px 的可点面积 */
+  min-height: 26px;
+  width: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out);
+}
+
+.theme-toggle-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+  transform: none;
+}
+
+.theme-toggle-btn.active {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.theme-toggle-btn.active:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+
+/* 窄屏的单键循环按钮：宽屏不出现 */
+.theme-cycle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  /* 触控目标下限 44×44 */
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition:
+    border-color var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out);
+}
+
+.theme-cycle:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  /* 三态分段控件换成单键循环：顶栏还要留给位置、搜索、环境状态 */
+  .theme-toggle {
+    display: none;
+  }
+
+  .theme-cycle {
+    display: inline-flex;
+  }
+}

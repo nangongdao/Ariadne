@@ -1,0 +1,114 @@
+[project]
+name = "ariadne"
+version = "0.1.0"
+description = "AI 工作流质量保障与可观测性平台"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+readme = "README.md"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "pydantic>=2.9,<3",
+    "pydantic-settings>=2.6,<3",
+    "httpx>=0.27,<1",
+]
+
+[project.optional-dependencies]
+server = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.32,<1",
+    "clickhouse-connect>=0.8,<1",
+    "redis>=5.2,<6",
+    "zstandard>=0.23,<1",
+    "sqlalchemy[asyncio]>=2.0.36,<3",
+    "asyncpg>=0.30,<1",
+    "alembic>=1.14,<2",
+    "cel-python>=0.1,<1",
+    "argon2-cffi>=25.1.0",
+    "pyjwt>=2.13.0",
+    "cryptography>=43.0",
+    "boto3>=1.35,<2",
+    "opentelemetry-proto>=1.28,<2",
+    "prometheus-client>=0.21,<1",
+]
+eval = [
+    "jsonschema>=4.23,<5",
+    "rapidfuzz>=3.10,<4",
+    "pyyaml>=6.0,<7",
+]
+
+[project.scripts]
+ariadne-api = "ariadne.cli:run_api"
+ariadne-worker = "ariadne.cli:run_worker"
+ariadne-migrate = "ariadne.cli:run_migrate"
+ariadne-eval = "ariadne.eval_cli:run_eval"
+ariadne-rules = "ariadne.rules_cli:run_rules"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3,<9",
+    "aiosqlite>=0.20,<1",
+    "types-jsonschema>=4.23,<5",
+    "types-PyYAML>=6.0,<7",
+    "types-protobuf>=4.24,<6",
+    "pytest-asyncio>=0.24,<1",
+    "ruff>=0.8,<1",
+    "mypy>=1.13,<2",
+    "boto3-stubs[s3]>=1.43.82,<2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ariadne", "src/ariadne_sdk"]
+
+# py.typed 让下游消费者能对 SDK 做类型检查（PEP 561）。
+# 缺它的话 mypy 会跳过整个包，SDK 的类型标注对用户毫无价值。
+[tool.hatch.build.targets.wheel.force-include]
+"src/ariadne/py.typed" = "ariadne/py.typed"
+"src/ariadne_sdk/py.typed" = "ariadne_sdk/py.typed"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "integration: 需要 ClickHouse / Redis 容器",
+    "slow: 基准测试等耗时用例（跑 1000 次求值量级）",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+# Alembic autogenerate 的输出不受行宽约束（列定义天然很长），
+# 但其余检查保留 —— 迁移文件里的真实错误仍要被抓到。
+"deploy/alembic/versions/*.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src", "deploy/alembic"]
+strict = true
+warn_return_any = true
+disallow_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["clickhouse_connect.*", "zstandard.*", "celpy.*", "argon2.*", "jwt.*", "cryptography.*"]
+ignore_missing_imports = true

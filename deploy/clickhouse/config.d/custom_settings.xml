@@ -1,0 +1,6 @@
+<clickhouse>
+    <!-- 002_row_policies.sql 的 row policy 依赖 currentSetting('ariadne.project_id')。
+         默认 custom_settings_prefixes 只有 SQL_，SET ariadne.project_id 会被
+         UNKNOWN_SETTING（code 115）拒绝。里把应用前缀一并注册。 -->
+    <custom_settings_prefixes>SQL_,ariadne.</custom_settings_prefixes>
+</clickhouse>

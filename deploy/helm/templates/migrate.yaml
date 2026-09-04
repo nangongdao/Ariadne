@@ -1,0 +1,44 @@
+{{/* 迁移 Job：每次部署前运行 ClickHouse DDL + Postgres Alembic
+   跑完即退出（restartPolicy: Never），不是常驻服务。
+   靠 pre-install/pre-upgrade hook + weight -5 保证早于 API 和 Worker，
+   所以应用 Pod 启动时 ariadne_app 角色一定已存在。
+   这里是唯一注入 Postgres owner 凭据的地方。
+*/}}
+{{- if .Values.migrate.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ariadne.fullname" (dict "Release" .Release "componentName" "migrate") }}
+  labels:
+    {{- include "ariadne.labels" (dict "Chart" .Chart "Release" .Release "componentName" "migrate") | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        {{- include "ariadne.selectorLabels" (dict "Release" .Release "componentName" "migrate") | nindent 8 }}
+    spec:
+      restartPolicy: {{ .Values.migrate.restartPolicy }}
+      containers:
+        - name: migrate
+          image: {{ include "ariadne.image" . | quote }}
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          command:
+            {{- toYaml .Values.migrate.command | nindent 12 }}
+          env:
+            {{- include "ariadne.storageEnv" . | nindent 12 }}
+            {{- include "ariadne.pgOwnerEnv" . | nindent 12 }}
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+{{- end }}

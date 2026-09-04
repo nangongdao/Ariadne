@@ -1,0 +1,151 @@
+/* ============================================================
+   Span 详情抽屉 —— 头部 / 键值区 / 载荷代码块
+   ------------------------------------------------------------
+   由 SpanDetail.tsx 使用。窄屏下抽屉从右列变成下方固定高度块，
+   见文件末尾媒体查询。
+   ============================================================ */
+
+.span-detail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  overflow-y: auto;
+}
+
+.span-detail.empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-raised);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev2);
+  flex-shrink: 0;
+}
+
+.detail-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.detail-title h2 {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.detail-section {
+  padding: var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-section h3 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: var(--sp-1) var(--sp-4);
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+
+.kv dt {
+  color: var(--text-faint);
+}
+
+.kv dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.kv-dense {
+  display: block;
+}
+
+.kv-row {
+  display: grid;
+  grid-template-columns: 45% 1fr;
+  gap: var(--sp-3);
+  padding: 2px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.kv-row dt,
+.kv-row dd {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.payload,
+.spec-yaml,
+.result-output {
+  margin: 0;
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 240px;
+  overflow: auto;
+}
+
+/* 跨页动作区（如「在 Playground 复现」）。头部已有下边框，这里只留内边距 */
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) 0;
+}
+
+/* 长 uuid + 复制按钮：值可省略号截断，按钮不参与压缩 */
+.dd-copy {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.dd-copy .ellipsis {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dd-copy .btn-icon {
+  flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+  /* 窄屏抽屉改为固定高度块，不再抢主区高度 */
+  .span-detail {
+    max-height: 42vh;
+  }
+}

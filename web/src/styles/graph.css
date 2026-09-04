@@ -1,0 +1,304 @@
+/* ============================================================
+   图编排编辑器（React Flow）
+   ============================================================ */
+
+.graph-editor-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: var(--sp-4) var(--sp-5);
+  overflow: hidden;
+}
+
+.graph-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-3);
+  flex-shrink: 0;
+}
+
+/* 标签压在输入框上方，窄屏时整组一起换行，不会让 label 和 input 断开 */
+.graph-toolbar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.graph-desc-input {
+  min-width: 180px;
+  font-size: var(--fs-sm);
+}
+
+.graph-name-input {
+  flex: 1;
+  min-width: 160px;
+  max-width: 320px;
+  font-size: var(--fs-md);
+  font-weight: 550;
+}
+
+.graph-editor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 292px;
+  gap: var(--sp-3);
+  flex: 1;
+  min-height: 0;
+}
+
+.graph-canvas-wrapper {
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+  overflow: hidden;
+}
+
+/* ---------- React Flow 深色适配 ---------- */
+
+.graph-canvas-wrapper .react-flow__attribution {
+  display: none;
+}
+
+.graph-canvas-wrapper .react-flow__controls {
+  box-shadow: var(--shadow-2);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.graph-canvas-wrapper .react-flow__controls button {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev2);
+  color: var(--text-dim);
+  min-height: 26px;
+}
+
+.graph-canvas-wrapper .react-flow__controls button:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.graph-canvas-wrapper .react-flow__controls button path {
+  fill: currentcolor;
+}
+
+.graph-canvas-wrapper .react-flow__minimap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+
+.graph-canvas-wrapper .react-flow__edge-path {
+  stroke: var(--border-focus);
+  stroke-width: 1.6;
+}
+
+.graph-canvas-wrapper .react-flow__edge.selected .react-flow__edge-path,
+.graph-canvas-wrapper .react-flow__edge:hover .react-flow__edge-path {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+}
+
+.graph-canvas-wrapper .react-flow__handle {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--bg);
+  background: var(--accent);
+}
+
+.graph-canvas-wrapper .react-flow__node.selected .graph-node {
+  border-color: var(--accent);
+  box-shadow: var(--glow-accent);
+}
+
+/* ---------- 节点卡片 ---------- */
+
+.graph-node {
+  min-width: 168px;
+  max-width: 232px;
+  padding: var(--sp-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev2);
+  box-shadow: var(--shadow-2), var(--sheen);
+  font-size: var(--fs-sm);
+  transition:
+    border-color var(--t-fast) var(--ease-out),
+    box-shadow var(--t-fast) var(--ease-out);
+}
+
+/* 连接桩。背景色与横向位置按端口数内联算，此处只定尺寸与描边。
+   命中区靠 ::after 放大到 18px，8px 的圆点太难拖中。 */
+.graph-port {
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--bg-base);
+}
+
+.react-flow__handle.graph-port::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+}
+
+.graph-node-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.graph-node-kind {
+  padding: 1px var(--sp-2);
+  border-radius: var(--radius-xs);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.graph-node-id {
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-node-params {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.graph-node-param {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+  font-family: var(--mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 侧栏 ---------- */
+
+.graph-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.node-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  flex-shrink: 0;
+}
+
+.node-toolbar h3,
+.config-panel h4 {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.node-toolbar .btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.config-panel {
+  flex: 1;
+  min-height: 0;
+  padding: var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  overflow-y: auto;
+}
+
+.config-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.config-panel h3 {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+
+.config-panel h4 {
+  margin-top: var(--sp-4);
+}
+
+.config-panel hr {
+  margin: var(--sp-4) 0 var(--sp-1);
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-3);
+}
+
+.config-field label {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.config-field input,
+.config-field textarea,
+.config-field select {
+  width: 100%;
+  font-size: var(--fs-sm);
+}
+
+.config-field input,
+.config-field textarea {
+  font-family: var(--mono);
+}
+
+.config-field textarea {
+  min-height: 30px;
+  resize: vertical;
+}
+
+/* JSON 草稿态：语法错误时边框转红，失焦才提交解析 */
+.config-field textarea[aria-invalid="true"],
+.config-field input[aria-invalid="true"] {
+  border-color: var(--error);
+}
+
+@media (max-width: 900px) {
+  .graph-editor-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .graph-sidebar {
+    max-height: 300px;
+  }
+}

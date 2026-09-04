@@ -1,0 +1,351 @@
+/* ============================================================
+   Loop 页 —— 创建表单 / 轮次图表 / 对比面板
+   ============================================================ */
+
+.loop-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 336px;
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+.loop-main {
+  min-width: 0;
+}
+
+.loop-sidebar {
+  position: sticky;
+  top: var(--sp-5);
+  padding: var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  box-shadow: var(--sheen);
+}
+
+.loop-sidebar h2 {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.loop-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.loop-create-form .field-row {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* ---------- 工作目录种子文件（command 断言的验证对象） ---------- */
+
+.workspace-files {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+}
+
+.workspace-files > legend {
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.workspace-file {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+
+.workspace-file-head {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+.workspace-file-head input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--mono);
+}
+
+/* 代码内容用等宽字体：缩进对不齐时肉眼能立刻看出来 */
+.workspace-file textarea {
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.loop-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--sp-4);
+  margin-top: var(--sp-5);
+}
+
+/* ---------- 实验对比 ---------- */
+
+.compare-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.compare-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-4);
+}
+
+.compare-header h2,
+.compare-header h3 {
+  margin: 0;
+}
+
+/* 基线/当前选择器：显式声明谁是基线，避免"哪个减哪个"的歧义 */
+.compare-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  font-size: var(--fs-sm);
+}
+
+.compare-pick label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--text-dim);
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-sm);
+}
+
+.compare-table th,
+.compare-table td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.compare-table th {
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.compare-table td.num,
+.compare-table th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 变化方向：箭头 + 颜色双通道 */
+.delta-up {
+  color: var(--ok);
+}
+
+.delta-down {
+  color: var(--error);
+}
+
+.delta-flat {
+  color: var(--text-faint);
+}
+
+.churn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--sp-4);
+  margin-top: var(--sp-4);
+}
+
+.flip-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+
+.flip-details {
+  margin-top: var(--sp-3);
+}
+
+.flip-details summary {
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+}
+
+.flip-details summary:hover {
+  color: var(--accent);
+}
+
+.flip-actions {
+  display: flex;
+  gap: var(--sp-3);
+  margin: var(--sp-3) 0;
+}
+
+/* ---------- 指标行：极性与判定 ---------- */
+
+.metric-name {
+  display: block;
+  font-weight: 550;
+}
+
+/* 差值的正负本身不含褒贬，极性标签必须紧跟指标名 */
+.metric-polarity {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.02em;
+}
+
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+.compare-table .badge-warn {
+  margin-left: var(--sp-2);
+}
+
+.compare-loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* ---------- 样本变化卡片 ---------- */
+
+.churn-cell .stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.churn-tone-tag {
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+}
+
+/*
+ * 区块标题里的总数。必须显式复位 —— .detail-section h3 是 11px + uppercase
+ * + letter-spacing:0.06em，直接套 .hint(12px) 会比标题本身还大，
+ * 且字距会把中文撑开。
+ */
+.churn-total {
+  margin-left: var(--sp-2);
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/*
+ * 子集卡片（转为通过/转为失败）在数据上被前一张大类卡片包含，
+ * 所以在视觉上也降一级：无实底、左侧连接线指回大类、数字小一号。
+ * 与大类等重会让四张卡读成可相加的四类。
+ */
+.churn-cell-sub {
+  position: relative;
+  background: none;
+  border-style: dashed;
+  padding-left: calc(var(--sp-4) + 6px);
+}
+
+.churn-cell-sub::before {
+  content: "";
+  position: absolute;
+  left: var(--sp-3);
+  top: 50%;
+  width: 6px;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+/* 只压字号，不碰颜色 —— delta-down/delta-up 是语义色，覆盖会吃掉"变差"的红 */
+.churn-cell-sub .stat-value {
+  font-size: var(--fs-md);
+}
+
+/* 只有「转为失败」有明细可下钻，也只有它做成按钮 —— 其余不给 hover 假象 */
+.churn-cell-link {
+  min-height: 44px;
+  align-items: stretch;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform var(--t-fast) var(--ease-out),
+    opacity var(--t-fast) var(--ease-out);
+}
+
+.churn-cell-link:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+}
+
+.churn-cell-link:active {
+  transform: translateY(0);
+}
+
+.churn-cell-link:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.churn-drill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: var(--sp-1);
+  color: var(--accent);
+  font-size: var(--fs-2xs);
+  font-weight: 550;
+}
+
+@media (max-width: 1000px) {
+  .loop-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .loop-sidebar {
+    position: static;
+  }
+}

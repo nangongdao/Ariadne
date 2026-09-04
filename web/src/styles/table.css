@@ -1,0 +1,209 @@
+/* ============================================================
+   数据表
+   ------------------------------------------------------------
+   规则：hover 高亮只用于"整行可点"的表；不可点的表不给 hover 背景，
+   否则暗示了不存在的交互。可点行由 .data-table.rows-link 声明。
+
+   现代圆润风：圆角外框、柔和表头底色、行悬停抬亮。列间不加竖线 ——
+   留白与对齐已足够分列，竖线只会让密集数据更吵。
+   ============================================================ */
+
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  font-size: var(--fs-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+}
+
+/* 表头：柔和底色 + 粗体小字，sticky 时与表体同底不穿帮 */
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-raised);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev2);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.data-table thead th.num {
+  text-align: right;
+}
+
+.data-table tbody td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 主标识列用正文色 + 加粗，其余降噪 */
+.data-table tbody td:first-child {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.data-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 长文本单元格：允许换行并限高，避免一行撑爆表格 */
+.cell-wrap {
+  max-width: 380px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+/* 模型标签列：内联换行的标签组。
+   刻意不叫 `.models` —— 那个名字属于模型配置页的卡片网格，
+   共用会把标签撑成 272px 的网格单元（见 cards.css 的说明）。 */
+.cell-models {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+  max-width: 260px;
+}
+
+.data-table .mono {
+  font-size: var(--fs-xs);
+}
+
+/* ---------- 可点击行 ---------- */
+
+.data-table.rows-link tbody tr {
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease-out);
+}
+
+.data-table.rows-link tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.data-table.rows-link tbody tr:hover td:first-child {
+  color: var(--accent);
+}
+
+.data-table tbody tr.selected {
+  background: var(--accent-soft);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* 行内链接默认继承正文色，hover 才显强调色，避免整表满是蓝字 */
+.data-table tbody a {
+  color: inherit;
+}
+
+.data-table tbody a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* 数据集样本预览：input 与 expected 并排，expected 弱化以区分 */
+.dataset-preview {
+  padding: var(--sp-2) 0;
+}
+
+.sample-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.sample-row {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: baseline;
+}
+
+.sample-row .cell-wrap {
+  max-width: 46ch;
+}
+
+.sample-expected {
+  color: var(--text-faint);
+}
+
+.sample-row .sample-expected {
+  max-width: 32ch;
+}
+
+.data-table tbody tr.row-error td:first-child {
+  color: var(--error);
+}
+
+/* ---------- 可展开行 ---------- */
+
+.row-expand {
+  padding: 0 !important;
+  background: var(--bg-sunken);
+}
+
+.row-expand-inner {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.expand-toggle {
+  width: 22px;
+  min-height: 22px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-faint);
+}
+
+.expand-toggle:hover {
+  background: var(--bg-hover);
+  border-color: transparent;
+  color: var(--text);
+}
+
+.expand-toggle svg {
+  transition: transform var(--t-fast) var(--ease-out);
+}
+
+.expand-toggle[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+/* ---------- 表格容器 ---------- */
+
+.table-wrap {
+  /* 窄屏横向滚动而非挤压列宽 */
+  overflow-x: auto;
+  border-radius: var(--radius);
+}
+
+@media (max-width: 900px) {
+  .data-table {
+    font-size: var(--fs-xs);
+  }
+
+  .data-table thead th,
+  .data-table tbody td {
+    padding: var(--sp-2) var(--sp-3);
+  }
+
+  .cell-wrap {
+    max-width: 200px;
+  }
+}

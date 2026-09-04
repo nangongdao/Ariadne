@@ -1,0 +1,315 @@
+/* ============================================================
+   按钮与控件
+   ------------------------------------------------------------
+   层级：btn-primary（每屏最多一个主行动）> btn（次要）>
+   btn-ghost（低干扰）> btn-icon（纯图标，必须带 aria-label）。
+   ============================================================ */
+
+button,
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  /* 32px 高度 + 12px 内边距，触控目标不小于 32×32；移动端下方放宽到 40px */
+  min-height: 32px;
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease-out),
+    border-color var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out),
+    box-shadow var(--t-fast) var(--ease-out),
+    transform var(--t-fast) var(--ease-out);
+}
+
+/* 次要按钮悬停：柔和填充，不按死 */
+button:hover,
+.btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-focus);
+  color: var(--text);
+}
+
+button:active,
+.btn:active {
+  transform: translateY(1px);
+}
+
+button:disabled,
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button:disabled:hover,
+.btn:disabled:hover {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+  transform: none;
+}
+
+button svg,
+.btn svg {
+  flex-shrink: 0;
+}
+
+/* ---------- 主行动 ----------
+   品牌红实心 + 白字，悬停加深并轻微抬升。醒目但不刺眼。 */
+
+.btn-primary,
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.btn-primary:hover,
+.btn.primary:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active,
+.btn.primary:active {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+  color: var(--accent-ink);
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.btn-primary:disabled:hover,
+.btn.primary:disabled:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: none;
+  transform: none;
+}
+
+/* ---------- 危险行动 ---------- */
+
+.btn-danger,
+.btn.danger {
+  background: transparent;
+  border-color: var(--error-border);
+  color: var(--error);
+}
+
+/* 对话框里的「不保存离开」：更弱的破坏性 —— 勾边但不着色，避免与
+   主操作抢视觉权重，仍保留危险色文字以传达不可逆 */
+.btn-danger-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-faint);
+}
+
+.btn-danger-ghost:hover {
+  background: var(--error-soft);
+  border-color: transparent;
+  color: var(--error);
+}
+
+.btn-danger:hover,
+.btn.danger:hover {
+  background: var(--error-soft);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+/* ---------- 低干扰 ---------- */
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-dim);
+}
+
+.btn-ghost:hover {
+  background: var(--bg-hover);
+  border-color: transparent;
+  color: var(--text);
+}
+
+.btn-icon {
+  width: 30px;
+  min-height: 30px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-faint);
+}
+
+.btn-icon:hover {
+  background: var(--bg-hover);
+  border-color: transparent;
+  color: var(--text);
+}
+
+.btn-sm,
+.btn.small {
+  min-height: 26px;
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-xs);
+}
+
+.close-btn {
+  width: 26px;
+  min-height: 26px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.close-btn:hover {
+  background: var(--bg-hover);
+  border-color: transparent;
+  color: var(--text);
+}
+
+/* ---------- 分段控件 ---------- */
+
+.seg-control,
+.view-switch {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+
+.seg-control button,
+.view-switch button {
+  min-height: 26px;
+  padding: 0 var(--sp-4);
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+}
+
+.seg-control button:hover,
+.view-switch button:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.seg-control button.active,
+.view-switch button.active,
+.seg-control button[aria-selected="true"],
+.view-switch button[aria-selected="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.seg-provider {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.seg-provider button {
+  flex: 1;
+}
+
+/* ---------- 胶囊筛选 ---------- */
+
+/* 只改形状不改高度：类选择器会盖掉 button 元素选择器，写死小高度
+   连移动端 38px 的放宽也一起挡掉，触控目标会不达标 */
+.chip-toggle {
+  padding: 0 var(--sp-4);
+  border-radius: var(--radius-full);
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+}
+
+.chip-toggle:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.chip-toggle[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---------- 键帽 ---------- */
+
+.kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-elev2);
+  color: var(--text-faint);
+  font-family: var(--mono);
+  font-size: var(--fs-2xs);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ---------- 链接式控件 ---------- */
+
+.back-link,
+.download-link,
+.settings-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+
+.back-link:hover,
+.download-link:hover,
+.settings-link:hover {
+  color: var(--accent);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+
+@media (max-width: 900px) {
+  button,
+  .btn {
+    min-height: 38px;
+  }
+
+  .btn-sm,
+  .btn.small {
+    min-height: 32px;
+  }
+}
